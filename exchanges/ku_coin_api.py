@@ -20,14 +20,13 @@ class KuCoinAPI():
 
     def get_deposit_address(self, coin):
         return self.client.get_deposit_address(coin=coin)
-
-    @property
-    def side_buy():
+    
+    def side_buy(self):
         return Client.SIDE_BUY
-    @property        
-    def side_sell():
+
+    def side_sell(self):
         return Client.SIDE_SELL
-    @property
-    def name():
+
+    def name(self):
         return KU_COIN_NAME
 

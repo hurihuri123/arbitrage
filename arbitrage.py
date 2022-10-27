@@ -31,6 +31,9 @@ class Arbitrage():
     def _should_take_arbitrage(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount):
         buy_orderbook = buy_exchange.get_order_book(symbol)
         sell_orderbook = sell_exchange.get_order_book(symbol)
+        print(buy_orderbook)
+        print(sell_orderbook)
+        return False
         volume = self._calculate_arbitrage_volume(buy_exchange, sell_exchange)
         gap = self._calculate_gap_precentages(buy_orderbook=buy_orderbook, sell_orderbook=sell_orderbook)
         fees = self._calculate_arbitrage_fees(buy_exchange, sell_exchange, symbol)
