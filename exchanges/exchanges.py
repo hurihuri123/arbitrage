@@ -2,7 +2,11 @@ from abc import ABC, abstractmethod
 from exchanges.binance_api import BinanceAPI
 from exchanges.ku_coin_api import KuCoinAPI
 
-class Exchange(ABC):        
+class Exchange(ABC):
+    @abstractmethod
+    @property
+    def name():
+        pass 
     @abstractmethod
     def get_order_book(self, symbol):
         pass
@@ -14,6 +18,15 @@ class Exchange(ABC):
         pass
     @abstractmethod
     def get_deposit_address(self, coin):
+        pass
+
+    @property
+    @abstractmethod
+    def side_buy():
+        pass
+    @property
+    @abstractmethod    
+    def side_sell():
         pass
 
 exchanges_dict = {

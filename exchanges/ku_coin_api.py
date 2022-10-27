@@ -1,5 +1,7 @@
 from kucoin.client import Client
 
+KU_COIN_NAME = "KUCOIN"
+
 class KuCoinAPI():
     def __init__(self, api_key, api_secret, api_passphrase) -> None:
         self.client = Client(api_key, api_secret, api_passphrase)
@@ -19,4 +21,13 @@ class KuCoinAPI():
     def get_deposit_address(self, coin):
         return self.client.get_deposit_address(coin=coin)
 
+    @property
+    def side_buy():
+        return Client.SIDE_BUY
+    @property        
+    def side_sell():
+        return Client.SIDE_SELL
+    @property
+    def name():
+        return KU_COIN_NAME
 

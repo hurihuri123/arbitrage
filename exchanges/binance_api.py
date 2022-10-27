@@ -1,6 +1,8 @@
 from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
 from binance.exceptions import BinanceAPIException
 
+BINANCE_NAME = "BINANCE"
+
 class BinanceAPI():
     def __init__(self, api_key, api_secret) -> None:
         self.client = Client(api_key, api_secret)
@@ -28,5 +30,15 @@ class BinanceAPI():
 
     def get_deposit_address(self, coin):
         return self.client.get_deposit_address(coin=coin)
+
+    @property
+    def side_buy():
+        return Client.SIDE_BUY
+    @property        
+    def side_sell():
+        return Client.SIDE_SELL    
+    @property
+    def name():
+        return BINANCE_NAME
 
 
