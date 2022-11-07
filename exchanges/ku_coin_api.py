@@ -6,8 +6,15 @@ class KuCoinAPI():
     def __init__(self, api_key, api_secret, api_passphrase) -> None:
         self.client = Client(api_key, api_secret, api_passphrase)
 
-    def get_order_book(self, symbol="BTCUSDT"):
-        return self.client.get_order_book(symbol=symbol)
+    def get_order_book(self, symbol):
+        symbol = self._format_symbol(symbol)
+        return self._get_order_book(symbol)
+
+    def get_bid_order_book(self, orderbook):                
+        return orderbook["bids"]
+
+    def get_ask_order_book(self, orderbook):                
+        return orderbook["asks"]
 
     def create_order(self, symbol, quantity ,side=Client.SIDE_BUY, type=None):
         return self.client.create_market_order(
@@ -20,6 +27,9 @@ class KuCoinAPI():
 
     def get_deposit_address(self, coin):
         return self.client.get_deposit_address(coin=coin)
+
+    def get_all_coins(self):
+        return self.client.get_currencies()
     
     def side_buy(self):
         return Client.SIDE_BUY
@@ -30,3 +40,9 @@ class KuCoinAPI():
     def name(self):
         return KU_COIN_NAME
 
+    def _format_symbol(self,symbol):
+        splited = symbol.split("USDT")
+        return splited[0] + "-USDT"
+
+    def _get_order_book(self, symbol):
+        return self.client.get_order_book(symbol=symbol)

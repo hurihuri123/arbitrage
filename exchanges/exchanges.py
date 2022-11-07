@@ -5,10 +5,16 @@ from exchanges.ku_coin_api import KuCoinAPI
 class Exchange(ABC):
     @abstractmethod    
     def name(self):
-        pass 
+        pass
     @abstractmethod
     def get_order_book(self, symbol):
+         pass
+    @abstractmethod
+    def get_bid_order_book(self, orderbook):
         pass
+    @abstractmethod
+    def get_ask_order_book(self, orderbook):
+         pass
     @abstractmethod
     def create_order(self, symbol, quantity ,side, type):
         pass
@@ -23,6 +29,9 @@ class Exchange(ABC):
         pass
     @abstractmethod        
     def side_sell(self):
+        pass
+    @abstractmethod        
+    def get_all_coins(self):
         pass
 
 exchanges_dict = {
