@@ -5,10 +5,8 @@ class Arbitrage():
         self.root_exchange = root_exchange # Serves as the bank and destination for all money
         
 
-    def scan(self, exchange1:Exchange, exchange2:Exchange):
-        # TODO: loop on all symbols
-        # get currencies
-        currencies = exchange1.get_all_coins()
+    def scan(self, exchange1:Exchange, exchange2:Exchange):                
+        currencies = exchange1.get_all_coins()        
         symbols = []
         for currency in currencies:
             symbol = currency["symbol"]
@@ -42,7 +40,24 @@ class Arbitrage():
         pass  # TODO: calculate tansfer time (also if needed to transfer money to buy_exchange)
 
     def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook, min_accepted_profit=None):
-        print("in calculate volume")
+        result = []
+        buy_index = sell_index = 0
+        while buy_index < len(buy_orderbook) and sell_index < len(sell_orderbook) and gap_percentage > 1:            
+            buy_leader_price, buy_leader_amount = buy_orderbook[buy_index]
+            sell_leader_price, sell_leader_amount = sell_orderbook[sell_index]
+            gap_percentage = self._get_change(float(buy_leader_price), float(sell_leader_price))
+            amount = min(buy_leader_amount, sell_leader_amount)
+            result.append({"percentage":gap_percentage,"amount":amount})
+            if buy_leader_amount > sell_leader_amount:
+                buy_orderbook[buy_index]["amount"] -= sell_leader_amount
+                sell_index += 1
+            elif buy_leader_amount < sell_leader_amount:
+                sell_orderbook[sell_index]["amount"] -= buy_leader_amount
+                buy_index += 1
+            else:
+                buy_index += 1
+                sell_index += 1
+        
         return 0       
 
     def _should_take_arbitrage(self, exchange1:Exchange, exchange2:Exchange, symbol):
@@ -52,7 +67,7 @@ class Arbitrage():
             print("No matching orderbook found for {} at exchanges {}/{}".format(symbol,exchange1.name(),exchange2.name()))
             return False
         volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2))
-        volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook2), sell_orderbook=exchange2.get_bid_order_book(orderbook1))
+        # volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook2), sell_orderbook=exchange2.get_bid_order_book(orderbook1))
         # TODO: estimate if we have enough time to do all the transfers (maybe use coin volume staticts from past 24 hours)
         # if volume amount, transfer_time
         return False         
@@ -61,3 +76,7 @@ class Arbitrage():
         profit = self._calculate_expected_profit(gap, amount, fees)
         return profit > 0
 
+    def _get_change(self, num1, num2):
+        big = max(num1, num2)
+        small = min(num1, num2)
+        return ((100 * big) / small) - 100
