@@ -41,26 +41,32 @@ class Arbitrage():
 
     def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook, min_accepted_profit=None):
         result = []
-        buy_index = sell_index = 0
+        buy_index = len(buy_orderbook) - 1
+        sell_index = len(sell_orderbook) - 1
         gap_percentage = 100
-        while buy_index < len(buy_orderbook) and sell_index < len(sell_orderbook) :            
+        print("\nbuy order book:\n {}".format(buy_orderbook))
+        print("\nsell order book:\n {}".format(sell_orderbook))
+        while buy_index >= 0 and sell_index >= 0 :            
             buy_leader_price = float(buy_orderbook[buy_index][0])
             buy_leader_amount = float(buy_orderbook[buy_index][1])
             sell_leader_price =  float(sell_orderbook[sell_index][0])
             sell_leader_amount = float(sell_orderbook[sell_index][1])
             gap_percentage = self._get_change(buy_leader_price, sell_leader_price)
-            amount = min(buy_leader_amount, sell_leader_amount)
-            result.append({"percentage":gap_percentage,"amount":amount})
+            amount = min(buy_leader_amount, sell_leader_amount)            
             if buy_leader_amount > sell_leader_amount:                            
                 buy_orderbook[buy_index][1] = buy_leader_amount - sell_leader_amount
-                sell_index += 1
+                price = sell_leader_price
+                sell_index -= 1
             elif buy_leader_amount < sell_leader_amount:
                 sell_orderbook[sell_index][1] = sell_leader_amount- buy_leader_amount
-                buy_index += 1
+                price = buy_leader_price
+                buy_index -= 1
             else:
-                buy_index += 1
-                sell_index += 1
-        print(result)
+                price = buy_leader_price
+                buy_index -= 1
+                sell_index -= 1
+            result.append({"percentage":gap_percentage,"price":price,"amount":amount})
+        print("\n{}\n".format(result))
         return 0       
 
     def _should_take_arbitrage(self, exchange1:Exchange, exchange2:Exchange, symbol):
