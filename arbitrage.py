@@ -40,7 +40,7 @@ class Arbitrage():
         pass  # TODO: calculate tansfer time (also if needed to transfer money to buy_exchange)
 
     def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook, min_accepted_profit=None):
-        result = []
+        results = []
         buy_index = len(buy_orderbook) - 1
         sell_index = len(sell_orderbook) - 1
         gap_percentage = 100
@@ -65,8 +65,15 @@ class Arbitrage():
                 price = buy_leader_price
                 buy_index -= 1
                 sell_index -= 1
-            result.append({"percentage":gap_percentage,"price":price,"amount":amount})
-        print("\n{}\n".format(result))
+            results.append({"percentage":gap_percentage,"price":price,"amount":amount})        
+        total_cost = total_profit = 0        
+        profits_results = []
+        for result in results:         
+            cost = result["price"] * result["amount"]            
+            total_cost += cost 
+            total_profit += cost * result["percentage"] / 100
+            profits_results.append({"total_cost":total_cost, "total_profit":total_profit})            
+        print("\nsummary:\n{}".format(profits_results))
         return 0       
 
     def _should_take_arbitrage(self, exchange1:Exchange, exchange2:Exchange, symbol):
