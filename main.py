@@ -3,5 +3,6 @@ from exchanges.exchanges import exchanges_dict
 
 
 if __name__ == "__main__":
-    arbitrage = Arbitrage(root_exchange=exchanges_dict["BINANCE"])    
-    arbitrage.scan(exchanges_dict["BINANCE"], exchanges_dict["KUCOIN"])
+    arbitrage = Arbitrage(root_exchange=exchanges_dict["BINANCE"])
+    while True: 
+        arbitrage.scan(exchanges_dict["BINANCE"], exchanges_dict["KUCOIN"])
