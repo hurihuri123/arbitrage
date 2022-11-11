@@ -42,11 +42,10 @@ class Arbitrage():
     def _calculate_transfer_time(self):
         pass  # TODO: calculate tansfer time (also if needed to transfer money to buy_exchange)
 
-    def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook, min_accepted_profit=None):
-        results = []
-        buy_index = len(buy_orderbook) - 1
-        sell_index = len(sell_orderbook) - 1        
-        while buy_index >= 0 and sell_index >= 0:            
+    def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook, min_accepted_profit=None):        
+        results = []                
+        buy_index = sell_index = 0
+        while buy_index < len(buy_orderbook) and sell_index < len(sell_orderbook):            
             buy_leader_price = float(buy_orderbook[buy_index][0])
             buy_leader_amount = float(buy_orderbook[buy_index][1])
             sell_leader_price =  float(sell_orderbook[sell_index][0])
@@ -56,15 +55,15 @@ class Arbitrage():
             if buy_leader_amount > sell_leader_amount:                            
                 buy_orderbook[buy_index][1] = buy_leader_amount - sell_leader_amount
                 price = sell_leader_price
-                sell_index -= 1
+                sell_index += 1
             elif buy_leader_amount < sell_leader_amount:
                 sell_orderbook[sell_index][1] = sell_leader_amount- buy_leader_amount
                 price = buy_leader_price
-                buy_index -= 1
+                buy_index += 1
             else:
                 price = buy_leader_price
-                buy_index -= 1
-                sell_index -= 1
+                buy_index += 1
+                sell_index += 1
             if gap_percentage < self.min_gap_percentage:
                 break         
             results.append({"percentage":gap_percentage,"price":price,"amount":amount})        
@@ -82,8 +81,8 @@ class Arbitrage():
 
     def _should_take_arbitrage(self, exchange1:Exchange, exchange2:Exchange, symbol):
         orderbook1 = exchange1.get_order_book(symbol)
-        orderbook2 = exchange2.get_order_book(symbol)        
-        if not orderbook1 or not orderbook2:            
+        orderbook2 = exchange2.get_order_book(symbol)           
+        if not orderbook1 or not orderbook2 or not exchange1.get_ask_order_book(orderbook1) or not exchange2.get_bid_order_book(orderbook2):
             print("No matching orderbook found for {} at exchanges {}/{}".format(symbol,exchange1.name(),exchange2.name()))
             return False
         volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2))
