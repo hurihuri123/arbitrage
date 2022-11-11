@@ -4,7 +4,10 @@ from datetime import datetime
 class Arbitrage():
     def __init__(self, root_exchange:Exchange) -> None:
         self.root_exchange = root_exchange # Serves as the bank and destination for all money        
-        self.min_gap_percentage = 2
+        self.min_gap_percentage = 0.1
+        self.max_gap_percentage = 15
+        self.budget = 100
+        self.budget_buffer = self.budget * 8
         
 
     def scan(self, exchange1:Exchange, exchange2:Exchange):                
@@ -17,7 +20,7 @@ class Arbitrage():
                 
         for symbol in symbols:
             print("Checking arbitrage for pair {} between exchanges {}/{}".format(symbol, exchange1.name(), exchange2.name()))
-            self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)            
+            result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)            
 
     def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount):
         if not self._should_take_arbitrage(buy_exchange, sell_exchange, symbol, amount):
@@ -41,6 +44,11 @@ class Arbitrage():
         pass # What's the cheapest network for this asset?
     def _calculate_transfer_time(self):
         pass  # TODO: calculate tansfer time (also if needed to transfer money to buy_exchange)
+    def _check_budget_buffer(self, results):
+        for result in results:
+            if result["total_cost"] >= self.budget_buffer:
+                return True
+        return False
 
     def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook, min_accepted_profit=None):        
         results = []                
@@ -64,7 +72,7 @@ class Arbitrage():
                 price = buy_leader_price
                 buy_index += 1
                 sell_index += 1
-            if gap_percentage < self.min_gap_percentage:
+            if gap_percentage < self.min_gap_percentage or gap_percentage >= self.max_gap_percentage:
                 break         
             results.append({"percentage":gap_percentage,"price":price,"amount":amount})        
         total_cost = total_profit = 0        
@@ -75,7 +83,7 @@ class Arbitrage():
             cost = result["price"] * result["amount"] 
             total_cost += cost 
             total_profit += cost * result["percentage"] / 100
-            profits_results.append({"total_cost":total_cost, "total_profit":total_profit})             
+            profits_results.append({"total_cost":total_cost, "total_profit":total_profit, "percentage":result["percentage"]})             
             cost = result["price"] * result["amount"]
         return profits_results   
 
@@ -87,17 +95,16 @@ class Arbitrage():
             return False
         volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2))
         if len(volume) > 0:
-            self._print_arbitrage(symbol=symbol, buy_orderbook=exchange1.get_ask_order_book(orderbook1),sell_orderbook=exchange2.get_bid_order_book(orderbook2), volume=volume)
+            print(volume)
+            self._print_arbitrage(symbol=symbol, buy_exchange=exchange1, sell_exchange=exchange2, volume=volume)
+            print("Check budget buffe result:{}".format(self._check_budget_buffer(volume)))           
 
         volume = self._calculate_arbitrage_volume(buy_orderbook=exchange2.get_ask_order_book(orderbook2), sell_orderbook=exchange1.get_bid_order_book(orderbook1))
         if len(volume) > 0:
-            self._print_arbitrage(symbol=symbol, buy_orderbook=exchange2.get_ask_order_book(orderbook2), sell_orderbook=exchange1.get_bid_order_book(orderbook1), volume=volume)
+            self._print_arbitrage(symbol=symbol, buy_exchange=exchange2, sell_exchange=exchange1, volume=volume)            
+            print("Check budget buffe result:{}".format(self._check_budget_buffer(volume)))           
         
-        # TODO: calculate if we have enough buffer
         return False         
-        gap = self._calculate_gap_precentages(buy_orderbook=buy_orderbook, sell_orderbook=sell_orderbook)
-        fees = self._calculate_arbitrage_fees(buy_exchange, sell_exchange, symbol)
-        profit = self._calculate_expected_profit(gap, amount, fees)
         return profit > 0
 
     def _get_change(self, num1, num2):
@@ -105,10 +112,13 @@ class Arbitrage():
         small = min(num1, num2)
         return ((100 * big) / small) - 100
 
-    def _print_arbitrage(self, symbol ,buy_orderbook, sell_orderbook, volume):
+    def _print_arbitrage(self, symbol, buy_exchange:Exchange, sell_exchange:Exchange, volume):
         now = datetime.now()
-        current_time = now.strftime("%H:%M:%S")
-        info = "\nTime:{}\nSymbol: {}\n volume: {}\n buy_orderbook:\n{}\n sell_orderbook:\n{}\n".format(current_time, symbol, volume, buy_orderbook, sell_orderbook)        
+        current_time = now.strftime("%H:%M:%S")           
+        total_cost = volume[-1]["total_cost"]
+        total_profit = volume[-1]["total_profit"]
+        percentage = volume[-1]["percentage"]
+        info = "\nTime:{}\nSymbol: {} Total cost:{} Total Profit:{} Percentage:{} Buy Exchange:{} Sell Exchange:{} \n {} \n".format(current_time, symbol, total_cost, total_profit, percentage, buy_exchange.name(), sell_exchange.name(), volume)        
         with open("arbitrages.txt", "a") as myfile:
             myfile.write(info)
             print("\n Wrote new arbitrage to file \n")
