@@ -1,4 +1,5 @@
 from exchanges.exchanges import Exchange
+from datetime import datetime
 
 class Arbitrage():
     def __init__(self, root_exchange:Exchange) -> None:
@@ -13,9 +14,10 @@ class Arbitrage():
             symbol = currency["symbol"]
             if symbol and "USDT" in symbol:
                 symbols.append(symbol)
-        
-        print("Checking arbitrage for pair {} between exchanges {}/{}".format(symbol, exchange1.name(), exchange2.name()))
-        result = self._should_take_arbitrage(exchange1, exchange2, symbol="BTCUSDT")            
+                
+        for symbol in symbols:
+            print("Checking arbitrage for pair {} between exchanges {}/{}".format(symbol, exchange1.name(), exchange2.name()))
+            self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)            
 
     def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount):
         if not self._should_take_arbitrage(buy_exchange, sell_exchange, symbol, amount):
@@ -44,8 +46,6 @@ class Arbitrage():
         results = []
         buy_index = len(buy_orderbook) - 1
         sell_index = len(sell_orderbook) - 1        
-        print("\nbuy order book:\n {}".format(buy_orderbook))
-        print("\nsell order book:\n {}".format(sell_orderbook))
         while buy_index >= 0 and sell_index >= 0:            
             buy_leader_price = float(buy_orderbook[buy_index][0])
             buy_leader_amount = float(buy_orderbook[buy_index][1])
@@ -71,14 +71,13 @@ class Arbitrage():
         total_cost = total_profit = 0        
         profits_results = []
         # TODO: merge this logic with the while loop above        
-        print("\n results:\n {}".format(results))
         # TODO: support calculating part of column, no need to take the whole column always.
         for result in results :            
             cost = result["price"] * result["amount"] 
             total_cost += cost 
             total_profit += cost * result["percentage"] / 100
             profits_results.append({"total_cost":total_cost, "total_profit":total_profit})             
-            cost = result["price"] * result["amount"]             
+            cost = result["price"] * result["amount"]
         return profits_results   
 
     def _should_take_arbitrage(self, exchange1:Exchange, exchange2:Exchange, symbol):
@@ -88,9 +87,14 @@ class Arbitrage():
             print("No matching orderbook found for {} at exchanges {}/{}".format(symbol,exchange1.name(),exchange2.name()))
             return False
         volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2))
-        # volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook2), sell_orderbook=exchange2.get_bid_order_book(orderbook1))
-        # TODO: estimate if we have enough time to do all the transfers (maybe use coin volume staticts from past 24 hours)
-        # if volume amount, transfer_time
+        if len(volume) > 0:
+            self._print_arbitrage(symbol=symbol, buy_orderbook=exchange1.get_ask_order_book(orderbook1),sell_orderbook=exchange2.get_bid_order_book(orderbook2), volume=volume)
+
+        volume = self._calculate_arbitrage_volume(buy_orderbook=exchange2.get_ask_order_book(orderbook2), sell_orderbook=exchange1.get_bid_order_book(orderbook1))
+        if len(volume) > 0:
+            self._print_arbitrage(symbol=symbol, buy_orderbook=exchange2.get_ask_order_book(orderbook2), sell_orderbook=exchange1.get_bid_order_book(orderbook1), volume=volume)
+        
+        # TODO: calculate if we have enough buffer
         return False         
         gap = self._calculate_gap_precentages(buy_orderbook=buy_orderbook, sell_orderbook=sell_orderbook)
         fees = self._calculate_arbitrage_fees(buy_exchange, sell_exchange, symbol)
@@ -101,3 +105,9 @@ class Arbitrage():
         big = max(num1, num2)
         small = min(num1, num2)
         return ((100 * big) / small) - 100
+
+    def _print_arbitrage(self, symbol ,buy_orderbook, sell_orderbook, volume):
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        print("\nTime:{}\nSymbol: {}\n volume: {}\n buy_orderbook:\n{}\n sell_orderbook:\n{}\n".format(current_time, symbol, volume, buy_orderbook, sell_orderbook))
+
