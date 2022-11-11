@@ -5,13 +5,14 @@ from datetime import datetime
 class Arbitrage():
     def __init__(self, root_exchange:Exchange) -> None:
         self.root_exchange = root_exchange # Serves as the bank and destination for all money        
-        self.min_gap_percentage = 0.1
+        self.min_gap_percentage = 3.5
         self.max_gap_percentage = 15
         self.budget = 100
         self.budget_buffer = self.budget * 8
         
 
     def scan(self, exchange1:Exchange, exchange2:Exchange):                
+        # TODO: hardcode list of symbols
         currencies = exchange1.get_all_coins()        
         symbols = []
         for currency in currencies:
@@ -57,7 +58,8 @@ class Arbitrage():
     def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook, min_accepted_profit=None):        
         results = []                
         buy_index = sell_index = 0
-        while buy_index < len(buy_orderbook) and sell_index < len(sell_orderbook):            
+        total_cost = total_profit = 0
+        while buy_index < len(buy_orderbook) and sell_index < len(sell_orderbook) and total_cost <= self.budget_buffer:            
             buy_leader_price = float(buy_orderbook[buy_index][0])
             buy_leader_amount = float(buy_orderbook[buy_index][1])
             sell_leader_price =  float(sell_orderbook[sell_index][0])
@@ -78,18 +80,13 @@ class Arbitrage():
                 sell_index += 1
             if gap_percentage < self.min_gap_percentage or gap_percentage >= self.max_gap_percentage:
                 break         
-            results.append({"percentage":gap_percentage,"price":price,"amount":amount})        
-        total_cost = total_profit = 0        
-        profits_results = []        
-        # TODO: merge this logic with the while loop above        
-        # TODO: support calculating part of column, no need to take the whole column always.
-        for result in results :            
-            cost = result["price"] * result["amount"]
+            cost = price * amount            
             total_cost += cost 
-            total_profit += cost * result["percentage"] / 100
-            profits_results.append({"total_cost":total_cost, "total_profit":total_profit, "percentage":result["percentage"]})             
-            cost = result["price"] * result["amount"]
-        return profits_results   
+            total_profit += cost * gap_percentage / 100
+            results.append({"total_cost":total_cost, "total_profit":total_profit, "percentage":gap_percentage})            
+                                
+        # TODO: support calculating part of column, no need to take the whole column always.
+        return results
 
     def _should_take_arbitrage(self, exchange1:Exchange, exchange2:Exchange, symbol):
         orderbook1 = exchange1.get_order_book(symbol)
@@ -98,7 +95,7 @@ class Arbitrage():
             print("No matching orderbook found for {} at exchanges {}/{}".format(symbol,exchange1.name(),exchange2.name()))
             return False
         volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2))
-        if len(volume) > 0 and self._check_budget_buffer(volume):            
+        if len(volume) > 0 and self._check_budget_buffer(volume):  # TODO: consider using total cost vaariable from should_take_arbitrage           
             return self.summary(symbol=symbol, buy_exchange=exchange1, sell_exchange=exchange2, volume=volume)                 
 
         volume = self._calculate_arbitrage_volume(buy_orderbook=exchange2.get_ask_order_book(orderbook2), sell_orderbook=exchange1.get_bid_order_book(orderbook1))
@@ -119,7 +116,8 @@ class Arbitrage():
 
     def write_to_file(self,summary):
         summary["BUY_EXCHANGE"] = summary["BUY_EXCHANGE"].name()
-        summary["SELL_EXCHANGE"] = summary["SELL_EXCHANGE"].name()
+        summary["SELL_EXCHANGE"] = summary["SELL_EXCHANGE"].name()                
         with open("arbitrages.txt", "a") as myfile:
+            myfile.write("\n")
             myfile.write(json.dumps(summary))
-            print("\n Wrote new arbitrage to file \n")
+            myfile.write("\n")            
