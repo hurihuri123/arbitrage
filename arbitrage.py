@@ -1,3 +1,4 @@
+import json
 from exchanges.exchanges import Exchange
 from datetime import datetime
 
@@ -20,7 +21,10 @@ class Arbitrage():
                 
         for symbol in symbols:
             print("Checking arbitrage for pair {} between exchanges {}/{}".format(symbol, exchange1.name(), exchange2.name()))
-            result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)            
+            result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)
+            if result:
+                # self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=result["BUDGET"])
+                self.write_to_file(result)
 
     def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount):
         if not self._should_take_arbitrage(buy_exchange, sell_exchange, symbol, amount):
@@ -76,11 +80,11 @@ class Arbitrage():
                 break         
             results.append({"percentage":gap_percentage,"price":price,"amount":amount})        
         total_cost = total_profit = 0        
-        profits_results = []
+        profits_results = []        
         # TODO: merge this logic with the while loop above        
         # TODO: support calculating part of column, no need to take the whole column always.
         for result in results :            
-            cost = result["price"] * result["amount"] 
+            cost = result["price"] * result["amount"]
             total_cost += cost 
             total_profit += cost * result["percentage"] / 100
             profits_results.append({"total_cost":total_cost, "total_profit":total_profit, "percentage":result["percentage"]})             
@@ -94,32 +98,28 @@ class Arbitrage():
             print("No matching orderbook found for {} at exchanges {}/{}".format(symbol,exchange1.name(),exchange2.name()))
             return False
         volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2))
-        if len(volume) > 0:
-            print(volume)
-            self._print_arbitrage(symbol=symbol, buy_exchange=exchange1, sell_exchange=exchange2, volume=volume)
-            print("Check budget buffe result:{}".format(self._check_budget_buffer(volume)))           
+        if len(volume) > 0 and self._check_budget_buffer(volume):            
+            return self.summary(symbol=symbol, buy_exchange=exchange1, sell_exchange=exchange2, volume=volume)                 
 
         volume = self._calculate_arbitrage_volume(buy_orderbook=exchange2.get_ask_order_book(orderbook2), sell_orderbook=exchange1.get_bid_order_book(orderbook1))
-        if len(volume) > 0:
-            self._print_arbitrage(symbol=symbol, buy_exchange=exchange2, sell_exchange=exchange1, volume=volume)            
-            print("Check budget buffe result:{}".format(self._check_budget_buffer(volume)))           
-        
-        return False         
-        return profit > 0
+        if len(volume) > 0 and self._check_budget_buffer(volume):
+            return self.summary(symbol=symbol, buy_exchange=exchange2, sell_exchange=exchange1, volume=volume)                        
+            
+        return None        
 
     def _get_change(self, num1, num2):
         big = max(num1, num2)
         small = min(num1, num2)
         return ((100 * big) / small) - 100
 
-    def _print_arbitrage(self, symbol, buy_exchange:Exchange, sell_exchange:Exchange, volume):
+    def summary(self, symbol, buy_exchange:Exchange, sell_exchange:Exchange, volume):
         now = datetime.now()
-        current_time = now.strftime("%H:%M:%S")           
-        total_cost = volume[-1]["total_cost"]
-        total_profit = volume[-1]["total_profit"]
-        percentage = volume[-1]["percentage"]
-        info = "\nTime:{}\nSymbol: {} Total cost:{} Total Profit:{} Percentage:{} Buy Exchange:{} Sell Exchange:{} \n {} \n".format(current_time, symbol, total_cost, total_profit, percentage, buy_exchange.name(), sell_exchange.name(), volume)        
-        with open("arbitrages.txt", "a") as myfile:
-            myfile.write(info)
-            print("\n Wrote new arbitrage to file \n")
+        current_time = now.strftime("%H:%M:%S")        
+        return  {"TIME":current_time,"SYMBOL":symbol,"BUDGET":self.budget,"BUY_EXCHANGE":buy_exchange,"SELL_EXCHANGE":sell_exchange,"VOLUME":volume}
 
+    def write_to_file(self,summary):
+        summary["BUY_EXCHANGE"] = summary["BUY_EXCHANGE"].name()
+        summary["SELL_EXCHANGE"] = summary["SELL_EXCHANGE"].name()
+        with open("arbitrages.txt", "a") as myfile:
+            myfile.write(json.dumps(summary))
+            print("\n Wrote new arbitrage to file \n")
