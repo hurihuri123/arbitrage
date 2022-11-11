@@ -108,5 +108,8 @@ class Arbitrage():
     def _print_arbitrage(self, symbol ,buy_orderbook, sell_orderbook, volume):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
-        print("\nTime:{}\nSymbol: {}\n volume: {}\n buy_orderbook:\n{}\n sell_orderbook:\n{}\n".format(current_time, symbol, volume, buy_orderbook, sell_orderbook))
+        info = "\nTime:{}\nSymbol: {}\n volume: {}\n buy_orderbook:\n{}\n sell_orderbook:\n{}\n".format(current_time, symbol, volume, buy_orderbook, sell_orderbook)        
+        with open("arbitrages.txt", "a") as myfile:
+            myfile.write(info)
+            print("\n Wrote new arbitrage to file \n")
 
