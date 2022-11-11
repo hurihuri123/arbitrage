@@ -3,6 +3,7 @@ from exchanges.exchanges import Exchange
 class Arbitrage():
     def __init__(self, root_exchange:Exchange) -> None:
         self.root_exchange = root_exchange # Serves as the bank and destination for all money
+        self.max_balance = 10000
         
 
     def scan(self, exchange1:Exchange, exchange2:Exchange):                
@@ -68,12 +69,18 @@ class Arbitrage():
             results.append({"percentage":gap_percentage,"price":price,"amount":amount})        
         total_cost = total_profit = 0        
         profits_results = []
-        for result in results:         
-            cost = result["price"] * result["amount"]            
+        # TODO: merge this logic with the while loop above
+        i = 0
+        cost = results[i]["price"] * results[i]["amount"] 
+        # TODO: support calculating part of column, no need to take the whole column always.
+        while i < len(results) - 1 and total_cost + cost <= self.max_balance:            
             total_cost += cost 
-            total_profit += cost * result["percentage"] / 100
-            profits_results.append({"total_cost":total_cost, "total_profit":total_profit})            
-        print("\nsummary:\n{}".format(profits_results))
+            total_profit += cost * results[i]["percentage"] / 100
+            profits_results.append({"total_cost":total_cost, "total_profit":total_profit}) 
+            i += 1
+            cost = results[i]["price"] * results[i]["amount"]             
+        print("\short nsummary:\n{}".format(profits_results))
+
         return 0       
 
     def _should_take_arbitrage(self, exchange1:Exchange, exchange2:Exchange, symbol):
