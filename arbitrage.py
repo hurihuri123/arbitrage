@@ -1,4 +1,5 @@
 import json
+import winsound
 from exchanges.exchanges import Exchange
 from datetime import datetime
 
@@ -120,4 +121,5 @@ class Arbitrage():
         with open("arbitrages.txt", "a") as myfile:
             myfile.write("\n")
             myfile.write(json.dumps(summary))
-            myfile.write("\n")            
+            myfile.write("\n")
+        winsound.Beep(2500, 1000)           
