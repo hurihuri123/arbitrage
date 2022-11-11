@@ -2,9 +2,8 @@ from exchanges.exchanges import Exchange
 
 class Arbitrage():
     def __init__(self, root_exchange:Exchange) -> None:
-        self.root_exchange = root_exchange # Serves as the bank and destination for all money
-        self.max_balance = 10000
-        self.min_gap_percentage = 0.1
+        self.root_exchange = root_exchange # Serves as the bank and destination for all money        
+        self.min_gap_percentage = 2
         
 
     def scan(self, exchange1:Exchange, exchange2:Exchange):                
@@ -78,14 +77,9 @@ class Arbitrage():
             cost = result["price"] * result["amount"] 
             total_cost += cost 
             total_profit += cost * result["percentage"] / 100
-
-            if total_cost + cost > self.max_balance:
-                break
             profits_results.append({"total_cost":total_cost, "total_profit":total_profit})             
             cost = result["price"] * result["amount"]             
-        print("\short nsummary:\n{}".format(profits_results))
-
-        return 0       
+        return profits_results   
 
     def _should_take_arbitrage(self, exchange1:Exchange, exchange2:Exchange, symbol):
         orderbook1 = exchange1.get_order_book(symbol)
