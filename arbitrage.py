@@ -24,7 +24,7 @@ class Arbitrage():
         for symbol in symbols:
             print("Checking arbitrage for pair {} between exchanges {}/{}".format(symbol, exchange1.name(), exchange2.name()))
             result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)
-            if result:
+            if result:                
                 # self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=result["BUDGET"])
                 self.write_to_file(result)
 
@@ -59,7 +59,7 @@ class Arbitrage():
     def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook, min_accepted_profit=None):        
         results = []                
         buy_index = sell_index = 0
-        total_cost = total_profit = 0
+        total_amount = total_cost = total_profit = 0
         while buy_index < len(buy_orderbook) and sell_index < len(sell_orderbook) and total_cost <= self.budget_buffer:            
             buy_leader_price = float(buy_orderbook[buy_index][0])
             buy_leader_amount = float(buy_orderbook[buy_index][1])
@@ -81,12 +81,13 @@ class Arbitrage():
                 sell_index += 1
             if gap_percentage < self.min_gap_percentage or gap_percentage >= self.max_gap_percentage:
                 break         
-            cost = price * amount            
+            cost = price * amount
+            total_amount += amount # TODO: convert amount to decimal
             total_cost += cost 
             total_profit += cost * gap_percentage / 100
-            results.append({"total_cost":total_cost, "total_profit":total_profit, "percentage":gap_percentage})            
+            results.append({"total_cost":total_cost, "total_profit":total_profit, "total_amount":total_amount ,"percentage":gap_percentage, "price":price})            
                                 
-        # TODO: support calculating part of column, no need to take the whole column always.
+        # TODO: support calculating part of column, no need to take the whole column always        
         return results
 
     def _should_take_arbitrage(self, exchange1:Exchange, exchange2:Exchange, symbol):
@@ -111,9 +112,19 @@ class Arbitrage():
         return ((100 * big) / small) - 100
 
     def summary(self, symbol, buy_exchange:Exchange, sell_exchange:Exchange, volume):
+        i = 0
+        total_coins = 0        
+        while i < len(volume) - 1 and volume[i + 1]["total_cost"] < self.budget: i+= 1
+        total_coins = volume[i]["total_amount"]
+        if total_coins * volume[i]["price"] >= self.budget:
+            total_coins = self.budget / volume[i]["price"]
+        else:
+            remaning_dolars = self.budget - volume[i]["total_cost"]
+            if remaning_dolars > 0:
+                total_coins += remaning_dolars / volume[i + 1]["price"]        
         now = datetime.now()
-        current_time = now.strftime("%H:%M:%S")        
-        return  {"TIME":current_time,"SYMBOL":symbol,"BUDGET":self.budget,"BUY_EXCHANGE":buy_exchange,"SELL_EXCHANGE":sell_exchange,"VOLUME":volume}
+        current_time = now.strftime("%H:%M:%S")                    
+        return  {"TIME":current_time,"SYMBOL":symbol,"BUDGET":self.budget,"COINS":total_coins,"BUY_EXCHANGE":buy_exchange,"SELL_EXCHANGE":sell_exchange,"VOLUME":volume}
 
     def write_to_file(self,summary):
         summary["BUY_EXCHANGE"] = summary["BUY_EXCHANGE"].name()
