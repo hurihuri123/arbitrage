@@ -6,6 +6,7 @@ BINANCE_NAME = "BINANCE"
 class BinanceAPI():
     def __init__(self, api_key, api_secret) -> None:
         self.client = Client(api_key, api_secret)
+        print("Connected to binance API with permissions:\n{}".format(self.client.get_account_api_permissions()))
 
     def get_order_book(self, symbol):
         return self._get_order_book(symbol)
@@ -16,8 +17,8 @@ class BinanceAPI():
     def get_ask_order_book(self, orderbook):                
         return orderbook["asks"]
 
-    def create_order(self, symbol, quantity ,side=Client.SIDE_BUY, type=Client.ORDER_TYPE_MARKET):
-        return self.client.create_test_order(
+    def create_order(self, symbol, quantity ,side=Client.SIDE_BUY, type=Client.ORDER_TYPE_MARKET):                                
+        return self.client.create_order(
                 symbol=symbol,
                 side=side,
                 type=type,
