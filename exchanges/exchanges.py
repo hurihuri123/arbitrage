@@ -19,6 +19,9 @@ class Exchange(ABC):
     def create_order(self, symbol, quantity ,side, type):
         pass
     @abstractmethod
+    def create_margin_order(self, symbol, quantity ,side, type):
+        pass
+    @abstractmethod
     def withdraw(self, asset, address, amount):
         pass
     @abstractmethod
@@ -32,6 +35,9 @@ class Exchange(ABC):
         pass
     @abstractmethod        
     def get_all_coins(self):
+        pass
+    @abstractmethod    
+    def transfer_spot_to_margin(self, amount, asset=None):
         pass
 
 exchanges_dict = {

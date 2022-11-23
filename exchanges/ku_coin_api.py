@@ -10,7 +10,7 @@ class KuCoinAPI():
         symbol = self._format_symbol(symbol)
         return self._get_order_book(symbol)
 
-    def get_bid_order_book(self, orderbook):                
+    def get_bid_order_book(self, orderbook):        
         return orderbook["bids"]
 
     def get_ask_order_book(self, orderbook):                
@@ -21,6 +21,9 @@ class KuCoinAPI():
                 symbol=symbol,
                 side=side,
                 size=quantity)
+
+    def transfer_spot_to_margin(self, amount, asset=None):
+        pass
 
     def withdraw(self, asset, address, amount):
         self.client.create_withdrawal(currency=asset, amount=amount, address=address)
