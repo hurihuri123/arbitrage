@@ -25,21 +25,23 @@ class Arbitrage():
         for symbol in symbols:
             print("Checking arbitrage for pair {} between exchanges {}/{}".format(symbol, exchange1.name(), exchange2.name()))
             result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)
-            if result:                
-                # self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=result["BUDGET"])
+            if result:
                 self.write_to_file(result)
+                self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=result["COINS"])                
 
     def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount):
-        if not self._should_take_arbitrage(buy_exchange, sell_exchange, symbol, amount):
-            print("Do arbitrage calcualted not profitable for symbol:{}".format(symbol))                          
-        # TODO: ensure that both exchanges as the same network for this coin. so it can be transfered!! otherwise do it manually.        
-        buy_exchange.create_order(symbol=symbol, quantity=amount, side=buy_exchange.side_buy)        
-        dest_wallet = sell_exchange.get_deposit_address(symbol) # TODO: specify network
-        buy_exchange.withdraw(asset=symbol, address=dest_wallet, amount=amount)
-        # TODO: wait for coin to arrive - get history or check balance in loop.
-        sell_exchange.create_order(symbol=symbol, quantity=amount, side=buy_exchange.side_sell)
-        if sell_exchange.name != self.root_exchange.name:
-            pass # TODO: transfer money back to root
+        # Perform margin sell
+        sell_exchange.transfer_spot_to_margin() # Transfer all spot USDT amount to margin account
+        sell_exchange.create_margin_order(symbol=symbol,quantity=amount,side=sell_exchange.side_sell())
+        # Perform spot buy
+        try:            
+            buy_exchange.create_order(symbol=symbol, quantity=amount, side=buy_exchange.side_buy())
+        except Exception as e:
+            # Buy the sold coins back
+            sell_exchange.create_margin_order(symbol=symbol,quantity=amount,side=sell_exchange.side_buy())
+            # TODO: repay loan
+            raise Exception("Failed placing buy spot order, exchange:{},symbol:{},amount:{}\n err:{}".format(buy_exchange.name(),symbol,amount,e))
+        
 
     def _calculate_gap_precentages(self, buy_orderbook, sell_orderbook):
         pass # TODO: return price gap percentages

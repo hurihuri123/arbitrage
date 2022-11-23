@@ -37,7 +37,7 @@ class Exchange(ABC):
     def get_all_coins(self):
         pass
     @abstractmethod    
-    def transfer_spot_to_margin(self, amount, asset=None):
+    def transfer_spot_to_margin(self, amount=None, asset=None):
         pass
 
 exchanges_dict = {

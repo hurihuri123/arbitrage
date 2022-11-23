@@ -27,8 +27,8 @@ class BinanceAPI():
                 type=type,
                 quantity=quantity)
 
-    def transfer_spot_to_margin(self, amount, asset=None):        
-        self.client.transfer_spot_to_margin(asset=asset or self.base_asset, amount=amount) 
+    def transfer_spot_to_margin(self, amount=None, asset=None):      
+        self.client.transfer_spot_to_margin(asset=asset or self.base_asset, amount=amount or self.balance) 
     
     def create_margin_order(self, symbol, quantity ,side=Client.SIDE_SELL, type=Client.ORDER_TYPE_MARKET):
         asset = symbol.split(self.base_asset)[0]        
