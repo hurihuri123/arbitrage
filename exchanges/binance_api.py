@@ -5,7 +5,7 @@ BINANCE_NAME = "BINANCE"
 
 class BinanceAPI():
     def __init__(self, api_key, api_secret) -> None:
-        self.base_asset = "BUSD"
+        self.base_asset = "USDT"
         self.client = Client(api_key, api_secret)
         self.balance = self.client.get_asset_balance(asset=self.base_asset)        
         print("Connected to binance API with {} balance: {}".format(self.base_asset, self.balance))
