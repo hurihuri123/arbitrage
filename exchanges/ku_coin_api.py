@@ -17,13 +17,23 @@ class KuCoinAPI():
         return orderbook["asks"]
 
     def create_order(self, symbol, quantity ,side=Client.SIDE_BUY, type=None):
+        symbol = self._format_symbol(symbol)     
         return self.client.create_market_order(
                 symbol=symbol,
                 side=side,
                 size=quantity)
 
     def transfer_spot_to_margin(self, amount, asset=None):
-        pass
+        self.client.create_inner_transfer(currency=asset, from_type="trade", to_type="margin", amount=amount)
+
+    def create_margin_order(self, symbol, quantity ,side=Client.SIDE_SELL, type=None):
+        symbol = self._format_symbol(symbol)
+        response = self.client.create_market_order(
+                symbol=symbol,
+                side=side,
+                size=quantity,
+                trade_type="MARGIN_TRADE")
+        print(response)
 
     def withdraw(self, asset, address, amount):
         self.client.create_withdrawal(currency=asset, amount=amount, address=address)
