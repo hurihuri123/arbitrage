@@ -28,9 +28,12 @@ class KuCoinAPI():
 
     def create_margin_order(self, symbol, side, quantity=None, funds=None, type=None):
         if side == "BUY": # TODO: investigate why it comes as input with captial letters
-            side = self.client.SIDE_BUY
+            side = self.client.SIDE_BUY  
+            quantity = None          
         else:
             side = self.client.SIDE_SELL
+            funds = None
+        print("In KuCion API, side:{}, quantity is: {}, funds:{}".format(side,quantity, funds))
         symbol = self._format_symbol(symbol)        
         response = self.client.create_margin_market_order(
                 symbol=symbol,
@@ -38,7 +41,10 @@ class KuCoinAPI():
                 size=quantity,
                 funds=funds       
                 )
-        print(response)
+        success = "orderId" in response and len(response["orderId"]) > 0
+        if not success:
+            raise Exception("KUCOIN: Failed openning margin order side:{}, type:{}, quantity:{}, funds:{}".format(side,type,quantity,funds))
+        return response
 
     def withdraw(self, asset, address, amount):
         self.client.create_withdrawal(currency=asset, amount=amount, address=address)
