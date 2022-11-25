@@ -16,7 +16,7 @@ class KuCoinAPI():
     def get_ask_order_book(self, orderbook):                
         return orderbook["asks"]
 
-    def create_order(self, symbol, quantity ,side=Client.SIDE_BUY, type=None):
+    def create_order(self, symbol, quantity ,side, type=None):
         symbol = self._format_symbol(symbol)     
         return self.client.create_market_order(
                 symbol=symbol,
@@ -26,13 +26,18 @@ class KuCoinAPI():
     def transfer_spot_to_margin(self, amount, asset=None):
         self.client.create_inner_transfer(currency=asset, from_type="trade", to_type="margin", amount=amount)
 
-    def create_margin_order(self, symbol, quantity ,side=Client.SIDE_SELL, type=None):
-        symbol = self._format_symbol(symbol)
-        response = self.client.create_market_order(
+    def create_margin_order(self, symbol, side, quantity=None, funds=None, type=None):
+        if side == "BUY": # TODO: investigate why it comes as input with captial letters
+            side = self.client.SIDE_BUY
+        else:
+            side = self.client.SIDE_SELL
+        symbol = self._format_symbol(symbol)        
+        response = self.client.create_margin_market_order(
                 symbol=symbol,
                 side=side,
                 size=quantity,
-                trade_type="MARGIN_TRADE")
+                funds=funds       
+                )
         print(response)
 
     def withdraw(self, asset, address, amount):
@@ -45,10 +50,10 @@ class KuCoinAPI():
         return self.client.get_currencies()
     
     def side_buy(self):
-        return Client.SIDE_BUY
+        return self.client.SIDE_BUY
 
     def side_sell(self):
-        return Client.SIDE_SELL
+        return self.client.SIDE_SELL
 
     def name(self):
         return KU_COIN_NAME
