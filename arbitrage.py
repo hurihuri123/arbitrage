@@ -27,21 +27,22 @@ class Arbitrage():
             print("Checking arbitrage for pair {} between exchanges {}/{}".format(symbol, exchange1.name(), exchange2.name()))
             result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)
             if result:
-                self.write_to_file(result)
-                print(result)
-                print(result["BUDGET"])
+                # self.write_to_file(result)
+                print(result)                
                 self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=result["COINS"],funds=result["BUDGET"])
                 raise Exception("GO OUT")
 
     def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount, funds):        
+        print("Buy Exhange:{}, Sell Exchange:{} \n".format(buy_exchange.name(), sell_exchange.name()))
         # Perform margin sell
         # sell_exchange.transfer_spot_to_margin() # Transfer all spot USDT amount to margin account
         print("In do arbitrage with funds :{}".format(funds))
         sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds ,side=sell_exchange.side_sell())    
         # Perform spot buy
-        try:            
+        try:                        
             buy_exchange.create_margin_order(symbol=symbol, quantity=amount, funds=funds, side=buy_exchange.side_buy()) 
         except Exception as e:
+            print("In Do arbitrage expection" + e)
             # Buy the sold coins back
             sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds, side=sell_exchange.side_buy()) 
             # TODO: repay loan

@@ -9,9 +9,9 @@ if __name__ == "__main__":
     # Binance spot buy
     # binance.create_order("XRPUSDT",52,binance.side_sell())  
     # Binance margin sell
-    # binance.transfer_spot_to_margin(asset="BUSD", amount=20)
-    # binance.create_margin_order("XRPUSDT",quantity=1,side=binance.side_sell())  
-
+    # binance.transfer_spot_to_margin(asset="BUSD", amount=20)    
+    # binance.create_margin_order("NEOUSDT",quantity= 0.142612272883099,side=binance.side_sell())  
+    
     # KuCoin spot buy
     # kucoin.create_order("XRPUSDT", 13, binance.side_sell())  
     # KuCoin margin sell
@@ -23,3 +23,5 @@ if __name__ == "__main__":
         except Exception as e:
             print(e)
             time.sleep(1)
+
+    # arbitrage.do(buy_exchange=binance, sell_exchange=kucoin, symbol="XRPUSDT", amount=27 , funds=15)

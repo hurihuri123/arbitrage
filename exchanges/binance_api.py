@@ -35,11 +35,12 @@ class BinanceAPI():
         funds = self._get_x_numbers_after_dot(funds)   
         asset = symbol.split(self.base_asset)[0]
         print("In Binance API, side:{}, quantity is: {}, funds:{}".format(side,quantity, funds))
-        response = self.client.create_margin_loan(asset=asset,amount=quantity)
-        #{'tranId': 123153594129, 'clientTag': ''}
-        if "tranId" not in response:
-            raise Exception("Binance loan error for asset:{},amount:{} err:{}".format(asset, quantity,response))            
-        print("loan response:{}".format(response))
+        if side == self.side_sell():            
+            response = self.client.create_margin_loan(asset=asset,amount=quantity)
+            #{'tranId': 123153594129, 'clientTag': ''}
+            if "tranId" not in response:            
+                raise Exception("Binance loan error for asset:{},amount:{} err:{}".format(asset, quantity,response))            
+            print("Binance loan response:{}".format(response))
         response = self.client.create_margin_order(symbol=symbol,
                 side=side,
                 type=type,
@@ -47,6 +48,7 @@ class BinanceAPI():
         
         success = "orderId" in response and len(str(response["orderId"])) > 0 and "transactTime" in response
         if not success:
+            #TODO: close loan
             raise Exception("BINANCE: Failed openning margin order side:{}, type:{}, quantity:{}".format(side,type,quantity))
         # {'symbol': 'XRPUSDT', 'orderId': 4887482516, 'clientOrderId': 'KZOeeTerhE8PgjDddUTaIM', 'transactTime': 1669371376191, 'price': '0', 'origQty': '60', 'executedQty': '60', 'cummulativeQuoteQty': '24.57', 'status': 'FILLED', 'timeInForce': 'GTC', 'type': 'MARKET', 'side': 'BUY', 'fills': [{'price': '0.4095', 'qty': '60', 'commission': '0.06', 'commissionAsset': 'XRP'}], 'isIsolated': False}
         return True

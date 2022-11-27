@@ -27,21 +27,20 @@ class KuCoinAPI():
         self.client.create_inner_transfer(currency=asset, from_type="trade", to_type="margin", amount=amount)
 
     def create_margin_order(self, symbol, side, quantity=None, funds=None, type=None):
+        print("In KuCoin create margin {} order".format(side))
         quantity = self._get_x_numbers_after_dot(quantity)  
-        funds = self._get_x_numbers_after_dot(funds)     
-        if side == "BUY": # TODO: investigate why it comes as input with captial letters
-            side = self.client.SIDE_BUY  
-            quantity = None          
-        else:
-            side = self.client.SIDE_SELL
-            funds = None
+        funds = self._get_x_numbers_after_dot(funds) 
+        if side == self.client.SIDE_BUY:
+            quantity = None            
+        else:            
+            funds = None            
         print("In KuCion API, side:{}, quantity is: {}, funds:{}".format(side,quantity, funds))
         symbol = self._format_symbol(symbol)        
         response = self.client.create_margin_market_order(
                 symbol=symbol,
                 side=side,
                 size=quantity,
-                funds=funds       
+                funds=funds                
                 )
         success = "orderId" in response and len(str(response["orderId"])) > 0
         if not success:
