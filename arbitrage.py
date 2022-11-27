@@ -28,13 +28,15 @@ class Arbitrage():
             result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)
             if result:
                 self.write_to_file(result)
+                print(result)
+                print(result["BUDGET"])
                 self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=result["COINS"],funds=result["BUDGET"])
                 raise Exception("GO OUT")
 
-    def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount, funds):
-        print(buy_exchange.name())
+    def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount, funds):        
         # Perform margin sell
         # sell_exchange.transfer_spot_to_margin() # Transfer all spot USDT amount to margin account
+        print("In do arbitrage with funds :{}".format(funds))
         sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds ,side=sell_exchange.side_sell())    
         # Perform spot buy
         try:            

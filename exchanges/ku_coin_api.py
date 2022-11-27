@@ -27,6 +27,8 @@ class KuCoinAPI():
         self.client.create_inner_transfer(currency=asset, from_type="trade", to_type="margin", amount=amount)
 
     def create_margin_order(self, symbol, side, quantity=None, funds=None, type=None):
+        quantity = self._get_x_numbers_after_dot(quantity)  
+        funds = self._get_x_numbers_after_dot(funds)     
         if side == "BUY": # TODO: investigate why it comes as input with captial letters
             side = self.client.SIDE_BUY  
             quantity = None          
@@ -41,7 +43,7 @@ class KuCoinAPI():
                 size=quantity,
                 funds=funds       
                 )
-        success = "orderId" in response and len(response["orderId"]) > 0
+        success = "orderId" in response and len(str(response["orderId"])) > 0
         if not success:
             raise Exception("KUCOIN: Failed openning margin order side:{}, type:{}, quantity:{}, funds:{}".format(side,type,quantity,funds))
         return response
@@ -70,3 +72,7 @@ class KuCoinAPI():
 
     def _get_order_book(self, symbol):
         return self.client.get_order_book(symbol=symbol)
+
+    def _get_x_numbers_after_dot(self, number):
+        if not number: return
+        return '{:.7f}'.format(number)
