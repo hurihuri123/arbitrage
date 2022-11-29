@@ -9,7 +9,7 @@ static_symbols =  ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'NEOUSDT', 'LTCUSDT', 'ADAUS
 class Arbitrage():
     def __init__(self, root_exchange:Exchange) -> None:
         self.root_exchange = root_exchange # Serves as the bank and destination for all money        
-        self.min_gap_percentage = 0.1
+        self.min_gap_percentage = 3
         self.max_gap_percentage = 15
         self.budget = 16
         self.budget_buffer = self.budget * 8
@@ -25,11 +25,14 @@ class Arbitrage():
         #         symbols.append(symbol)        
         for symbol in symbols:
             print("Checking arbitrage for pair {} between exchanges {}/{}".format(symbol, exchange1.name(), exchange2.name()))
+            # TODO: calculate transcations fees - each exchange take the fees as quntity from our order.
             result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)
             if result: 
                 self.write_to_file(result)
                 print(result)                
-                self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=float(result["COINS"]),funds=float(result["BUDGET"]))                
+                self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=float(result["COINS"]),funds=float(result["BUDGET"]))                                                
+                return True
+        return False
 
     def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount, funds):
         print("In do arbitrage with: buyExchange:{},sellExchange:{},symbol:{},amount:{},funds:{}\n".format(buy_exchange.name(),sell_exchange.name(),symbol,amount,funds))   
