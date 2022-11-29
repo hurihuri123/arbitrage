@@ -19,7 +19,7 @@ class Exchange(ABC):
     def create_order(self, symbol, quantity ,side, type):
         pass
     @abstractmethod
-    def create_margin_order(self, symbol, side, quantity=None, funds=None, type=None):
+    def create_margin_order(self, symbol, side, quantity=None, funds=None, order_type=None):
         pass
     @abstractmethod
     def withdraw(self, asset, address, amount):

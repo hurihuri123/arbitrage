@@ -26,25 +26,27 @@ class KuCoinAPI():
     def transfer_spot_to_margin(self, amount, asset=None):
         self.client.create_inner_transfer(currency=asset, from_type="trade", to_type="margin", amount=amount)
 
-    def create_margin_order(self, symbol, side, quantity=None, funds=None, type=None):
-        print("In KuCoin create margin {} order".format(side))
-        quantity = self._get_x_numbers_after_dot(quantity)  
-        funds = self._get_x_numbers_after_dot(funds) 
-        if side == self.client.SIDE_BUY:
+    def create_margin_order(self, symbol, side, quantity=None, funds=None, order_type=None):
+        print("In KuCoin create margin order with:\n symbol:{},side:{},quantity:{},funds:{},type:{}".format(symbol,side,quantity,funds,order_type))
+        symbol = self._format_symbol(symbol)  
+        if side == "BUY" or side == "buy":
+            side = self.client.SIDE_BUY
             quantity = None            
         else:            
+            side = self.client.SIDE_SELL
             funds = None            
-        print("In KuCion API, side:{}, quantity is: {}, funds:{}".format(side,quantity, funds))
-        symbol = self._format_symbol(symbol)        
+        print("In KuCion API, side:{}, quantity is: {}, funds:{}".format(side,quantity, funds))              
         response = self.client.create_margin_market_order(
                 symbol=symbol,
                 side=side,
                 size=quantity,
                 funds=funds                
                 )
+        print("KuCoin create margin order done\n")
         success = "orderId" in response and len(str(response["orderId"])) > 0
         if not success:
-            raise Exception("KUCOIN: Failed openning margin order side:{}, type:{}, quantity:{}, funds:{}".format(side,type,quantity,funds))
+            raise Exception("KUCOIN: Failed openning margin order side:{}, type:{}, quantity:{}, funds:{}".format(side,order_type,quantity,funds))
+        print("KuCoin {} {} success".format(side,symbol))
         return response
 
     def withdraw(self, asset, address, amount):
@@ -72,6 +74,3 @@ class KuCoinAPI():
     def _get_order_book(self, symbol):
         return self.client.get_order_book(symbol=symbol)
 
-    def _get_x_numbers_after_dot(self, number):
-        if not number: return
-        return '{:.7f}'.format(number)
