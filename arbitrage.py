@@ -11,7 +11,7 @@ class Arbitrage():
         self.root_exchange = root_exchange # Serves as the bank and destination for all money        
         self.min_gap_percentage = 0.1
         self.max_gap_percentage = 15
-        self.budget = 20
+        self.budget = 16
         self.budget_buffer = self.budget * 8
         
 
@@ -27,24 +27,23 @@ class Arbitrage():
             print("Checking arbitrage for pair {} between exchanges {}/{}".format(symbol, exchange1.name(), exchange2.name()))
             result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)
             if result: 
-                # self.write_to_file(result)
+                self.write_to_file(result)
                 print(result)                
                 self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=float(result["COINS"]),funds=float(result["BUDGET"]))                
 
-    def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount, funds):   
+    def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount, funds):
+        print("In do arbitrage with: buyExchange:{},sellExchange:{},symbol:{},amount:{},funds:{}\n".format(buy_exchange.name(),sell_exchange.name(),symbol,amount,funds))   
         amount =self._get_x_numbers_after_dot(amount)
-        funds = self._get_x_numbers_after_dot(funds)
-        print("Buy Exhange:{}, Sell Exchange:{} \n".format(buy_exchange.name(), sell_exchange.name()))
-        # Perform margin sell
-        # sell_exchange.transfer_spot_to_margin() # Transfer all spot USDT amount to margin account        
+        funds = self._get_x_numbers_after_dot(funds)        
+        
         sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds ,side=sell_exchange.side_sell())    
-        # Perform spot buy
         try:                        
             buy_exchange.create_margin_order(symbol=symbol, quantity=amount, funds=funds, side=buy_exchange.side_buy()) 
         except Exception as e:
-            print("In Do arbitrage expection" + e)
+            print("In Do Arbitrage exception\n")
+            print(e)
             # Buy the sold coins back
-            # sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds, side=sell_exchange.side_buy()) 
+            sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds, side=sell_exchange.side_buy()) 
             # TODO: repay loan
             raise Exception("Failed placing buy spot order, exchange:{},symbol:{},amount:{}\n err:{}".format(buy_exchange.name(),symbol,amount,e))
         
@@ -149,4 +148,4 @@ class Arbitrage():
         if type(number) != float:
             raise Exception("_get_x_numbers_after_dot: only float numbers are accepted")
         if not number: return
-        return float('{:.6f}'.format(number))       
+        return float('{:.2f}'.format(number)) # TODO: solve binance LOT_SIZE issue that forced us to keep only 2 numbers after dot
