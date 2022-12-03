@@ -11,8 +11,8 @@ if __name__ == "__main__":
         try:
             did_took_arbitrage = arbitrage.scan(exchanges_dict["BINANCE"], exchanges_dict["KUCOIN"]) 
             if did_took_arbitrage:
-
                 break
+            time.sleep(5)
         except Exception as e:
             print(e)
             time.sleep(1)
