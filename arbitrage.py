@@ -4,6 +4,7 @@ import copy
 from exchanges.exchanges import Exchange
 from datetime import datetime
 from services.send_email import sendEmail
+from datetime import datetime
 
 static_symbols =  ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'NEOUSDT', 'LTCUSDT', 'ADAUSDT', 'XRPUSDT', 'EOSUSDT', 'ONTUSDT', 'TRXUSDT', 'ETCUSDT', 'LINKUSDT', 'WAVESUSDT', 'ZILUSDT', 'ZECUSDT', 'DASHUSDT', 'NANOUSDT', 'THETAUSDT', 'ENJUSDT', 'MATICUSDT', 'ATOMUSDT', 'DOGEUSDT', 'DUSKUSDT','CHZUSDT', 'RVNUSDT', 'HBARUSDT', 'VITEUSDT', 'FTTUSDT', 'COTIUSDT', 'SOLUSDT', 'COMPUSDT', 'MANAUSDT', 'ANTUSDT', 'SANDUSDT', 'DOTUSDT', 'LUNAUSDT', 'RSRUSDT', 'KSMUSDT', 'EGLDUSDT', 'TRXUPUSDT', 'SUNUSDT', 'AVAXUSDT', 'HNTUSDT', 'AAVEUSDT', 'NEARUSDT',  'ROSEUSDT', 'AVAUSDT', 'AAVEUPUSDT', 'AAVEDOWNUSDT', 'SUSHIUPUSDT', 'SUSHIDOWNUSDT', '1INCHUSDT', 'REEFUSDT',  'SHIBUSDT', 'ICPUSDT', 'MASKUSDT',  'ATAUSDT', 'GTCUSDT', 'QNTUSDT','ENSUSDT', 'RNDRUSDT', 'SANTOSUSDT', 'APEUSDT', 'GALUSDT',  'LUNCUSDT', 'GMXUSDT',  'APTUSDT', 'HFTUSDT']
 
@@ -25,7 +26,9 @@ class Arbitrage():
         #     if symbol and "USDT" in symbol:
         #         symbols.append(symbol)        
         for symbol in symbols:
-            print("Checking arbitrage for pair {} between exchanges {}/{}".format(symbol, exchange1.name(), exchange2.name()))
+            now = datetime.now()
+            current_time = now.strftime("%H:%M:%S")   
+            print("{} checking arbitrage for pair {} between exchanges {}/{}".format(current_time,symbol, exchange1.name(), exchange2.name()))
             # TODO: calculate transcations fees - each exchange take the fees as quntity from our order.
             result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)
             if result: 
