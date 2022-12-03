@@ -1,6 +1,6 @@
 import json
 import copy
-import winsound
+# import winsound
 from exchanges.exchanges import Exchange
 from datetime import datetime
 from services.send_email import sendEmail
@@ -148,7 +148,7 @@ class Arbitrage():
             myfile.write("\n")
             myfile.write(json.dumps(summary))
             myfile.write("\n")
-        winsound.Beep(2500, 1000)    
+        #winsound.Beep(2500, 1000)    
 
     def _get_x_numbers_after_dot(self, number):
         if type(number) != float:
