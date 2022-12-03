@@ -3,6 +3,7 @@ import copy
 import winsound
 from exchanges.exchanges import Exchange
 from datetime import datetime
+from services.send_email import sendEmail
 
 static_symbols =  ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'NEOUSDT', 'LTCUSDT', 'ADAUSDT', 'XRPUSDT', 'EOSUSDT', 'ONTUSDT', 'TRXUSDT', 'ETCUSDT', 'LINKUSDT', 'WAVESUSDT', 'ZILUSDT', 'ZECUSDT', 'DASHUSDT', 'NANOUSDT', 'THETAUSDT', 'ENJUSDT', 'MATICUSDT', 'ATOMUSDT', 'DOGEUSDT', 'DUSKUSDT','CHZUSDT', 'RVNUSDT', 'HBARUSDT', 'VITEUSDT', 'FTTUSDT', 'COTIUSDT', 'SOLUSDT', 'COMPUSDT', 'MANAUSDT', 'ANTUSDT', 'SANDUSDT', 'DOTUSDT', 'LUNAUSDT', 'RSRUSDT', 'KSMUSDT', 'EGLDUSDT', 'TRXUPUSDT', 'SUNUSDT', 'AVAXUSDT', 'HNTUSDT', 'AAVEUSDT', 'NEARUSDT',  'ROSEUSDT', 'AVAUSDT', 'AAVEUPUSDT', 'AAVEDOWNUSDT', 'SUSHIUPUSDT', 'SUSHIDOWNUSDT', '1INCHUSDT', 'REEFUSDT',  'SHIBUSDT', 'ICPUSDT', 'MASKUSDT',  'ATAUSDT', 'GTCUSDT', 'QNTUSDT','ENSUSDT', 'RNDRUSDT', 'SANTOSUSDT', 'APEUSDT', 'GALUSDT',  'LUNCUSDT', 'GMXUSDT',  'APTUSDT', 'HFTUSDT']
 
@@ -30,7 +31,8 @@ class Arbitrage():
             if result: 
                 self.write_to_file(result)
                 print(result)                
-                self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=float(result["COINS"]),funds=float(result["BUDGET"]))                                                
+                self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=float(result["COINS"]),funds=float(result["BUDGET"]))                                
+                sendEmail(title="Do Arbitrage success",contect="Come take your money")
                 return True
         return False
 
@@ -38,13 +40,14 @@ class Arbitrage():
         print("In do arbitrage with: buyExchange:{},sellExchange:{},symbol:{},amount:{},funds:{}\n".format(buy_exchange.name(),sell_exchange.name(),symbol,amount,funds))   
         amount =self._get_x_numbers_after_dot(amount)
         funds = self._get_x_numbers_after_dot(funds)        
-        
-        sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds ,side=sell_exchange.side_sell())    
+                  
         try:                        
+            sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds ,side=sell_exchange.side_sell())  
             buy_exchange.create_margin_order(symbol=symbol, quantity=amount, funds=funds, side=buy_exchange.side_buy()) 
         except Exception as e:
             print("In Do Arbitrage exception\n")
             print(e)
+            sendEmail(title="Do Arbitrage exception",contect=str(e))
             # Buy the sold coins back
             sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds, side=sell_exchange.side_buy()) 
             # TODO: repay loan
