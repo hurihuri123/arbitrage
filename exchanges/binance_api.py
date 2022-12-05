@@ -32,8 +32,7 @@ class BinanceAPI():
     
     def create_margin_order(self, symbol, side, quantity=None, funds=None, order_type=Client.ORDER_TYPE_MARKET):
         print(self.get_symbol_info(symbol=symbol))
-        print("In Binance create margin order with:\n symbol:{},side:{},quantity:{},funds:{},type:{}".format(symbol,side,quantity,funds,order_type)) 
-        print("qunityt type:{}, funds type:{} \n".format(type(quantity),type(funds))) 
+        print("In Binance create margin order with:\n symbol:{},side:{},quantity:{},funds:{},type:{}".format(symbol,side,quantity,funds,order_type))         
         asset = symbol.split(self.base_asset)[0]        
         
         if side == self.side_sell():            

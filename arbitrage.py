@@ -35,12 +35,13 @@ class Arbitrage():
                 self.write_to_file(result)
                 print(result)                
                 self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=float(result["COINS"]),funds=float(result["BUDGET"]))                                
-                sendEmail(title="Do Arbitrage success",contect="Come take your money")
+                sendEmail(title="Do Arbitrage success",contect="Come take your money:\n{}".format(str(result)))
                 return True
         return False
 
     def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount, funds):
-        print("In do arbitrage with: buyExchange:{},sellExchange:{},symbol:{},amount:{},funds:{}\n".format(buy_exchange.name(),sell_exchange.name(),symbol,amount,funds))   
+        print_data = "In do arbitrage with: buyExchange:{},sellExchange:{},symbol:{},amount:{},funds:{}\n".format(buy_exchange.name(),sell_exchange.name(),symbol,amount,funds)
+        print(print_data)   
         amount =self._get_x_numbers_after_dot(amount)
         funds = self._get_x_numbers_after_dot(funds)        
                   
@@ -50,7 +51,7 @@ class Arbitrage():
         except Exception as e:
             print("In Do Arbitrage exception\n")
             print(e)
-            sendEmail(title="Do Arbitrage exception",contect=str(e))
+            sendEmail(title="Do Arbitrage exception",contect="{}\n{}".format(print_data, str(e)))
             # Buy the sold coins back
             sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds, side=sell_exchange.side_buy()) 
             # TODO: repay loan
