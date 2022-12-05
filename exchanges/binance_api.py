@@ -32,7 +32,7 @@ class BinanceAPI():
     
     def create_margin_order(self, symbol, side, quantity=None, funds=None, order_type=Client.ORDER_TYPE_MARKET):
         print(self.get_symbol_info(symbol=symbol))
-        print("In Binance create margin order with:\n symbol:{},side:{},quantity:{},funds:{},type:{}".format(symbol,side,quantity,funds,order_type))         
+        print("In Binance side:{} symbol:{} ,quantity:{},funds:{},type:{}".format(side, symbol,quantity,funds,order_type))         
         asset = symbol.split(self.base_asset)[0]        
         
         if side == self.side_sell():            
@@ -40,8 +40,7 @@ class BinanceAPI():
             #{'tranId': 123153594129, 'clientTag': ''}
             if "tranId" not in response:            
                 raise Exception("Binance loan error for asset:{},amount:{} err:{}".format(asset, quantity,response))            
-            print("Binance loan response:{}".format(response))
-        print("Binance create_margin_order\n")
+            print("Binance loan response:{}".format(response))        
         response = self.client.create_margin_order(symbol=symbol,
                 side=side,
                 type=order_type,

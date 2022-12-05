@@ -1,6 +1,7 @@
 import time
 from arbitrage import Arbitrage
 from exchanges.exchanges import exchanges_dict, Exchange
+from services.send_email import sendEmail
 
 if __name__ == "__main__":
     arbitrage = Arbitrage(root_exchange=exchanges_dict["BINANCE"])    
@@ -16,5 +17,8 @@ if __name__ == "__main__":
         except Exception as e:
             print(e)
             time.sleep(1)
+    sendEmail(title="Exiting arbitrage program", content="im out")
+    print("exit program")
+
 
     

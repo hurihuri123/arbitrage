@@ -27,22 +27,20 @@ class KuCoinAPI():
         self.client.create_inner_transfer(currency=asset, from_type="trade", to_type="margin", amount=amount)
 
     def create_margin_order(self, symbol, side, quantity=None, funds=None, order_type=None):
-        print("In KuCoin create margin order with:\n symbol:{},side:{},quantity:{},funds:{},type:{}".format(symbol,side,quantity,funds,order_type))
+        print("In KuCoin side:{} symbol:{},quantity:{},funds:{},type:{}".format(side,symbol,quantity,funds,order_type))
         symbol = self._format_symbol(symbol)  
         if side == "BUY" or side == "buy":
             side = self.client.SIDE_BUY
             quantity = None            
         else:            
             side = self.client.SIDE_SELL
-            funds = None            
-        print("In KuCion API, side:{}, quantity is: {}, funds:{}".format(side,quantity, funds))              
+            funds = None                               
         response = self.client.create_margin_market_order(
                 symbol=symbol,
                 side=side,
                 size=quantity,
                 funds=funds                
-                )
-        print("KuCoin create margin order done\n")
+                )        
         success = "orderId" in response and len(str(response["orderId"])) > 0
         if not success:
             raise Exception("KUCOIN: Failed openning margin order side:{}, type:{}, quantity:{}, funds:{}".format(side,order_type,quantity,funds))
