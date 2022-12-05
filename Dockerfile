@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
 FROM python:3.6-slim
 
+RUN apt update && apt-get install vim
+
 WORKDIR /app
 
 COPY . .

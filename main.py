@@ -17,7 +17,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(e)
             time.sleep(1)
-    sendEmail(title="Exiting arbitrage program", content="im out")
+    sendEmail(title="Exiting arbitrage program", contect="im out")
     print("exit program")
 
 

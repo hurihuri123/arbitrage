@@ -39,11 +39,11 @@ class Arbitrage():
                 return True
         return False
 
-    def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount, funds):
-        print_data = "In do arbitrage with: buyExchange:{},sellExchange:{},symbol:{},amount:{},funds:{}\n".format(buy_exchange.name(),sell_exchange.name(),symbol,amount,funds)
-        print(print_data)   
+    def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount, funds): 
         amount =self._get_x_numbers_after_dot(amount)
-        funds = self._get_x_numbers_after_dot(funds)        
+        funds = self._get_x_numbers_after_dot(funds)
+        print_data = "In do arbitrage with: buyExchange:{},sellExchange:{},symbol:{},amount:{},funds:{}\n".format(buy_exchange.name(),sell_exchange.name(),symbol,amount,funds)
+        print(print_data)  
                   
         try:                        
             sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds ,side=sell_exchange.side_sell())  
