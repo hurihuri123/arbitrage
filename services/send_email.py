@@ -11,7 +11,7 @@ def sendEmail(title, contect):
     # SET THE INFO ABOUT THE SAID EMAIL
     # =============================================================================
     sent_from = gmail_user
-    sent_to = ['Yacobital304@gmail.com', 'danielhuri1515@gmail.com']
+    sent_to = ['talyacobiz2@gmail.com', 'danielhuriapple2@gmail.com']
     sent_subject = title
     sent_body = contect
 
