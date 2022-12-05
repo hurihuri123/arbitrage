@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 FROM python:3.6-slim
 
-RUN apt update && apt-get install vim
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install install vim
 
 WORKDIR /app
 
