@@ -8,9 +8,16 @@ if __name__ == "__main__":
     binance:Exchange = exchanges_dict["BINANCE"]
     kucoin:Exchange = exchanges_dict["KUCOIN"]
 
+    symbols = []
+    currencies = binance.get_all_coins()             
+    for currency in currencies:
+        symbol = currency["symbol"]
+        if symbol and "USDT" in symbol:
+            symbols.append(symbol)   
+
     while True:
         try:
-            did_took_arbitrage = arbitrage.scan(exchanges_dict["BINANCE"], exchanges_dict["KUCOIN"]) 
+            did_took_arbitrage = arbitrage.scan(symbols=symbols, exchange1=exchanges_dict["BINANCE"], exchange2=exchanges_dict["KUCOIN"]) 
             if did_took_arbitrage:
                 break
             time.sleep(5)

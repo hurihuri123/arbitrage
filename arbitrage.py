@@ -15,19 +15,12 @@ class Arbitrage():
         self.max_gap_percentage = 15
         self.budget = 16
         self.budget_buffer = self.budget * 8
-        self.run_time_failed_symbols = []
+        self.run_time_ignore_symbols = []
         
 
-    def scan(self, exchange1:Exchange, exchange2:Exchange):                
-        # TODO: hardcode list of symbols
-        # currencies = exchange1.get_all_coins()        
-        symbols = static_symbols
-        # for currency in currencies:
-        #     symbol = currency["symbol"]
-        #     if symbol and "USDT" in symbol:
-        #         symbols.append(symbol)        
+    def scan(self, symbols, exchange1:Exchange, exchange2:Exchange):             
         for symbol in symbols:
-            if symbol in self.run_time_failed_symbols:
+            if symbol in self.run_time_ignore_symbols:
                 continue
             now = datetime.now()
             current_time = now.strftime("%H:%M:%S")   
@@ -55,7 +48,7 @@ class Arbitrage():
             print("In Do Arbitrage exception\n")
             print(e)                        
             sendEmail(title="Do Arbitrage exception",contect="{}\n{}".format(print_data, str(e)))
-            self.run_time_failed_symbols.append(symbol)
+            self.run_time_ignore_symbols.append(symbol)
             # Buy the sold coins back
             sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds, side=sell_exchange.side_buy()) 
             # TODO: repay loan
@@ -117,6 +110,7 @@ class Arbitrage():
         orderbook2 = exchange2.get_order_book(symbol)           
         if not orderbook1 or not orderbook2 or not exchange1.get_ask_order_book(orderbook1) or not exchange2.get_bid_order_book(orderbook2):
             print("No matching orderbook found for {} at exchanges {}/{}".format(symbol,exchange1.name(),exchange2.name()))
+            self.run_time_ignore_symbols.append(symbol)
             return False
         volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2))
         if len(volume) > 0 and self._check_budget_buffer(volume):  # TODO: consider using total cost vaariable from should_take_arbitrage           
