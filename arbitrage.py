@@ -15,6 +15,7 @@ class Arbitrage():
         self.max_gap_percentage = 15
         self.budget = 16
         self.budget_buffer = self.budget * 8
+        self.run_time_failed_symbols = []
         
 
     def scan(self, exchange1:Exchange, exchange2:Exchange):                
@@ -26,6 +27,8 @@ class Arbitrage():
         #     if symbol and "USDT" in symbol:
         #         symbols.append(symbol)        
         for symbol in symbols:
+            if symbol in self.run_time_failed_symbols:
+                continue
             now = datetime.now()
             current_time = now.strftime("%H:%M:%S")   
             print("{} checking arbitrage for pair {} between exchanges {}/{}".format(current_time,symbol, exchange1.name(), exchange2.name()))
@@ -48,10 +51,11 @@ class Arbitrage():
         try:                        
             sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds ,side=sell_exchange.side_sell())  
             buy_exchange.create_margin_order(symbol=symbol, quantity=amount, funds=funds, side=buy_exchange.side_buy()) 
-        except Exception as e:
+        except Exception as e:            
             print("In Do Arbitrage exception\n")
-            print(e)
+            print(e)                        
             sendEmail(title="Do Arbitrage exception",contect="{}\n{}".format(print_data, str(e)))
+            self.run_time_failed_symbols.append(symbol)
             # Buy the sold coins back
             sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds, side=sell_exchange.side_buy()) 
             # TODO: repay loan
