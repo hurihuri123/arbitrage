@@ -8,7 +8,8 @@ from services.send_email import sendEmail
 from datetime import datetime
 
 static_symbols =  ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'NEOUSDT', 'LTCUSDT', 'ADAUSDT', 'XRPUSDT', 'EOSUSDT', 'ONTUSDT', 'TRXUSDT', 'ETCUSDT', 'LINKUSDT', 'WAVESUSDT', 'ZILUSDT', 'ZECUSDT', 'DASHUSDT', 'NANOUSDT', 'THETAUSDT', 'ENJUSDT', 'MATICUSDT', 'ATOMUSDT', 'DOGEUSDT', 'DUSKUSDT','CHZUSDT', 'RVNUSDT', 'HBARUSDT', 'VITEUSDT', 'FTTUSDT', 'SOLUSDT', 'COMPUSDT', 'MANAUSDT', 'ANTUSDT', 'SANDUSDT', 'DOTUSDT', 'LUNAUSDT', 'RSRUSDT', 'KSMUSDT', 'EGLDUSDT', 'TRXUPUSDT', 'SUNUSDT', 'AVAXUSDT', 'HNTUSDT', 'AAVEUSDT', 'NEARUSDT',  'ROSEUSDT', 'AVAUSDT', 'AAVEUPUSDT', 'AAVEDOWNUSDT', 'SUSHIUPUSDT', 'SUSHIDOWNUSDT', '1INCHUSDT', 'REEFUSDT',  'SHIBUSDT', 'ICPUSDT', 'MASKUSDT',  'ATAUSDT', 'GTCUSDT', 'QNTUSDT','ENSUSDT', 'RNDRUSDT', 'SANTOSUSDT', 'APEUSDT', 'GALUSDT',  'LUNCUSDT',  'APTUSDT', 'HFTUSDT']
-IGNORE_ERROR_MESSAGES = ["The system does not have enough asset now", "Current symbol does not support margin trade", "Not a valid margin asset"]
+# IGNORE_ERROR_MESSAGES = ["The system does not have enough asset now", "Current symbol does not support margin trade", "Not a valid margin asset"]
+IGNORE_ERROR_MESSAGES = []
 IGNORE_LIST_PATH = "ignore_list.txt"
 
 class Arbitrage():
