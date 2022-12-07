@@ -7,6 +7,8 @@ from services.send_email import sendEmail
 from datetime import datetime
 
 static_symbols =  ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'NEOUSDT', 'LTCUSDT', 'ADAUSDT', 'XRPUSDT', 'EOSUSDT', 'ONTUSDT', 'TRXUSDT', 'ETCUSDT', 'LINKUSDT', 'WAVESUSDT', 'ZILUSDT', 'ZECUSDT', 'DASHUSDT', 'NANOUSDT', 'THETAUSDT', 'ENJUSDT', 'MATICUSDT', 'ATOMUSDT', 'DOGEUSDT', 'DUSKUSDT','CHZUSDT', 'RVNUSDT', 'HBARUSDT', 'VITEUSDT', 'FTTUSDT', 'SOLUSDT', 'COMPUSDT', 'MANAUSDT', 'ANTUSDT', 'SANDUSDT', 'DOTUSDT', 'LUNAUSDT', 'RSRUSDT', 'KSMUSDT', 'EGLDUSDT', 'TRXUPUSDT', 'SUNUSDT', 'AVAXUSDT', 'HNTUSDT', 'AAVEUSDT', 'NEARUSDT',  'ROSEUSDT', 'AVAUSDT', 'AAVEUPUSDT', 'AAVEDOWNUSDT', 'SUSHIUPUSDT', 'SUSHIDOWNUSDT', '1INCHUSDT', 'REEFUSDT',  'SHIBUSDT', 'ICPUSDT', 'MASKUSDT',  'ATAUSDT', 'GTCUSDT', 'QNTUSDT','ENSUSDT', 'RNDRUSDT', 'SANTOSUSDT', 'APEUSDT', 'GALUSDT',  'LUNCUSDT',  'APTUSDT', 'HFTUSDT']
+IGNORE_ERROR_MESSAGES = ["The system does not have enough asset now", "Current symbol does not support margin trade"]
+IGNORE_LIST_PATH = "ignore_list.txt"
 
 class Arbitrage():
     def __init__(self, root_exchange:Exchange) -> None:
@@ -15,12 +17,12 @@ class Arbitrage():
         self.max_gap_percentage = 15
         self.budget = 16
         self.budget_buffer = self.budget * 8
-        self.run_time_ignore_symbols = []
+        self.ignore_list = self.read_ignore_list()
         
 
     def scan(self, symbols, exchange1:Exchange, exchange2:Exchange):             
         for symbol in symbols:
-            if symbol in self.run_time_ignore_symbols:
+            if symbol in self.ignore_list:
                 continue
             now = datetime.now()
             current_time = now.strftime("%H:%M:%S")   
@@ -46,9 +48,15 @@ class Arbitrage():
             buy_exchange.create_margin_order(symbol=symbol, quantity=amount, funds=funds, side=buy_exchange.side_buy()) 
         except Exception as e:            
             print("In Do Arbitrage exception\n")
-            print(e)                        
-            sendEmail(title="Do Arbitrage exception",contect="{}\n{}".format(print_data, str(e)))
-            self.run_time_ignore_symbols.append(symbol)
+            print(e)
+            should_send_email = True
+            for err_msg in IGNORE_ERROR_MESSAGES:
+                if err_msg in str(e):
+                    should_send_email = False
+                    break
+            if should_send_email:
+                sendEmail(title="Do Arbitrage exception",contect="{}\n{}".format(print_data, str(e)))
+            self.add_symbol_to_ignore_list(symbol)            
             # Buy the sold coins back
             sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds, side=sell_exchange.side_buy()) 
             # TODO: repay loan
@@ -110,7 +118,7 @@ class Arbitrage():
         orderbook2 = exchange2.get_order_book(symbol)           
         if not orderbook1 or not orderbook2 or not exchange1.get_ask_order_book(orderbook1) or not exchange2.get_bid_order_book(orderbook2):
             print("No matching orderbook found for {} at exchanges {}/{}".format(symbol,exchange1.name(),exchange2.name()))
-            self.run_time_ignore_symbols.append(symbol)
+            self.add_symbol_to_ignore_list(symbol)
             return False
         volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2))
         if len(volume) > 0 and self._check_budget_buffer(volume):  # TODO: consider using total cost vaariable from should_take_arbitrage           
@@ -150,7 +158,23 @@ class Arbitrage():
             myfile.write("\n")
             myfile.write(json.dumps(summary))
             myfile.write("\n")
-        #winsound.Beep(2500, 1000)    
+        #winsound.Beep(2500, 1000)   
+
+    def add_symbol_to_ignore_list(self, symbol):
+        self.ignore_list.append(symbol)
+        with open(IGNORE_LIST_PATH, 'w') as f:
+            for line in self.ignore_list:
+                f.write("%s\n" % line)
+
+    def read_ignore_list(self):        
+        try:
+            stopword=open(IGNORE_LIST_PATH,"r")
+            lines = stopword.read().split('\n')
+            print("ignore list:\n {}".format(lines))
+            return lines
+        except Exception as e:
+            print(e)
+            return []
 
     def _get_x_numbers_after_dot(self, number):
         if type(number) != float:
