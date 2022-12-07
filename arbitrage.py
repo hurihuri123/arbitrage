@@ -1,5 +1,6 @@
 import json
 import copy
+import time
 # import winsound
 from exchanges.exchanges import Exchange
 from datetime import datetime
@@ -7,7 +8,7 @@ from services.send_email import sendEmail
 from datetime import datetime
 
 static_symbols =  ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'NEOUSDT', 'LTCUSDT', 'ADAUSDT', 'XRPUSDT', 'EOSUSDT', 'ONTUSDT', 'TRXUSDT', 'ETCUSDT', 'LINKUSDT', 'WAVESUSDT', 'ZILUSDT', 'ZECUSDT', 'DASHUSDT', 'NANOUSDT', 'THETAUSDT', 'ENJUSDT', 'MATICUSDT', 'ATOMUSDT', 'DOGEUSDT', 'DUSKUSDT','CHZUSDT', 'RVNUSDT', 'HBARUSDT', 'VITEUSDT', 'FTTUSDT', 'SOLUSDT', 'COMPUSDT', 'MANAUSDT', 'ANTUSDT', 'SANDUSDT', 'DOTUSDT', 'LUNAUSDT', 'RSRUSDT', 'KSMUSDT', 'EGLDUSDT', 'TRXUPUSDT', 'SUNUSDT', 'AVAXUSDT', 'HNTUSDT', 'AAVEUSDT', 'NEARUSDT',  'ROSEUSDT', 'AVAUSDT', 'AAVEUPUSDT', 'AAVEDOWNUSDT', 'SUSHIUPUSDT', 'SUSHIDOWNUSDT', '1INCHUSDT', 'REEFUSDT',  'SHIBUSDT', 'ICPUSDT', 'MASKUSDT',  'ATAUSDT', 'GTCUSDT', 'QNTUSDT','ENSUSDT', 'RNDRUSDT', 'SANTOSUSDT', 'APEUSDT', 'GALUSDT',  'LUNCUSDT',  'APTUSDT', 'HFTUSDT']
-IGNORE_ERROR_MESSAGES = ["The system does not have enough asset now", "Current symbol does not support margin trade"]
+IGNORE_ERROR_MESSAGES = ["The system does not have enough asset now", "Current symbol does not support margin trade", "Not a valid margin asset"]
 IGNORE_LIST_PATH = "ignore_list.txt"
 
 class Arbitrage():
@@ -16,7 +17,7 @@ class Arbitrage():
         self.min_gap_percentage = 3
         self.max_gap_percentage = 15
         self.budget = 16
-        self.budget_buffer = self.budget * 8
+        self.budget_buffer = self.budget * 100
         self.ignore_list = self.read_ignore_list()
         
 
@@ -35,6 +36,7 @@ class Arbitrage():
                 self.do(buy_exchange=result["BUY_EXCHANGE"], sell_exchange=result["SELL_EXCHANGE"],symbol=result["SYMBOL"],amount=float(result["COINS"]),funds=float(result["BUDGET"]))                                
                 sendEmail(title="Do Arbitrage success",contect="Come take your money:\n{}".format(str(result)))
                 return True
+            time.sleep(0.03)
         return False
 
     def do(self, buy_exchange:Exchange, sell_exchange:Exchange, symbol, amount, funds): 
@@ -112,6 +114,16 @@ class Arbitrage():
                                 
         # TODO: support calculating part of column, no need to take the whole column always        
         return results
+
+    def _should_take_arbitrage2(self, balance):
+        """
+        TODO:
+        1. Calcualte how many coins can buy/sell at each platform using the input balance
+        2. Calcualte how many spare coins you will gain
+        3. Calcualte how much the spare coins worth in dollars
+        4. Calcualte the profit in percentages
+        """
+        pass
 
     def _should_take_arbitrage(self, exchange1:Exchange, exchange2:Exchange, symbol):
         orderbook1 = exchange1.get_order_book(symbol)
