@@ -15,14 +15,14 @@ IGNORE_LIST_PATH = "ignore_list.txt"
 class Arbitrage():
     def __init__(self, root_exchange:Exchange) -> None:
         self.root_exchange = root_exchange # Serves as the bank and destination for all money        
-        self.min_gap_percentage = 3
+        self.min_gap_percentage = 1
         self.max_gap_percentage = 15
-        self.budget = 16
-        self.budget_buffer = self.budget * 100
+        self.budget = 15
+        self.budget_buffer = self.budget * 1
         self.ignore_list = self.read_ignore_list()
         
 
-    def scan(self, symbols, exchange1:Exchange, exchange2:Exchange):             
+    def scan(self, symbols, exchange1:Exchange, exchange2:Exchange):         
         for symbol in symbols:
             if symbol in self.ignore_list:
                 continue
@@ -30,7 +30,8 @@ class Arbitrage():
             current_time = now.strftime("%H:%M:%S")   
             print("{} checking arbitrage for pair {} between exchanges {}/{}".format(current_time,symbol, exchange1.name(), exchange2.name()))
             # TODO: calculate transcations fees - each exchange take the fees as quntity from our order.
-            result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)
+            # result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)
+            result = self._should_take_arbitrage2(exchange1, exchange2, symbol=symbol)            
             if result: 
                 self.write_to_file(result)
                 print(result)                
@@ -82,7 +83,7 @@ class Arbitrage():
                 return True
         return False
 
-    def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook, min_accepted_profit=None):        
+    def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook):        
         results = []                
         buy_index = sell_index = 0
         total_amount = total_cost = total_profit = 0
@@ -116,15 +117,44 @@ class Arbitrage():
         # TODO: support calculating part of column, no need to take the whole column always        
         return results
 
-    def _should_take_arbitrage2(self, balance):
+    def _calculate_arbitrage_volume2(self, buy_orderbook, sell_orderbook, budget_buffer , min_gap_percentage):
         """
         TODO:
         1. Calcualte how many coins can buy/sell at each platform using the input balance
         2. Calcualte how many spare coins you will gain
         3. Calcualte how much the spare coins worth in dollars
         4. Calcualte the profit in percentages
-        """
-        pass
+        """        
+        print("BUY:\n{}".format(buy_orderbook))
+        print("SELL:\n{}".format(sell_orderbook))
+        buy_total_coins, last_buy_price = self._calculate_arbitrage_coins(buy_orderbook, budget_buffer)
+        sell_total_coins, last_sell_price = self._calculate_arbitrage_coins(sell_orderbook, budget_buffer)
+        coins_profit = buy_total_coins - sell_total_coins
+        profit_dollars = coins_profit * last_sell_price
+        profit_percentage = profit_dollars / budget_buffer * 100
+        result = {"total_cost":self.budget, "total_profit":profit_dollars,"percentage":profit_percentage, "price":last_sell_price, "total_buy_coins":buy_total_coins, "total_sell_coins":sell_total_coins}
+        print(result)
+        if profit_percentage >= min_gap_percentage: 
+            return [result]
+        else:
+            return []
+
+    def _should_take_arbitrage2(self, exchange1:Exchange, exchange2:Exchange, symbol):
+        orderbook1 = exchange1.get_order_book(symbol)
+        orderbook2 = exchange2.get_order_book(symbol)           
+        if not orderbook1 or not orderbook2 or not exchange1.get_ask_order_book(orderbook1) or not exchange2.get_bid_order_book(orderbook2):
+            print("No matching orderbook found for {} at exchanges {}/{}".format(symbol,exchange1.name(),exchange2.name()))
+            self.add_symbol_to_ignore_list(symbol)
+            return False
+        volume = self._calculate_arbitrage_volume2(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2), budget_buffer=self.budget_buffer, min_gap_percentage=self.min_gap_percentage)
+        if len(volume) > 0:  # TODO: consider using total cost vaariable from should_take_arbitrage           
+            return self.summary(symbol=symbol, buy_exchange=exchange1, sell_exchange=exchange2, volume=volume)                 
+
+        volume = self._calculate_arbitrage_volume2(buy_orderbook=exchange2.get_ask_order_book(orderbook2), sell_orderbook=exchange1.get_bid_order_book(orderbook1), budget_buffer=self.budget_buffer, min_gap_percentage=self.min_gap_percentage)
+        if len(volume) > 0:
+            return self.summary(symbol=symbol, buy_exchange=exchange2, sell_exchange=exchange1, volume=volume)                        
+            
+        return None   
 
     def _should_take_arbitrage(self, exchange1:Exchange, exchange2:Exchange, symbol):
         orderbook1 = exchange1.get_order_book(symbol)
@@ -194,3 +224,21 @@ class Arbitrage():
             raise Exception("_get_x_numbers_after_dot: only float numbers are accepted")
         if not number: return
         return float('{:.2f}'.format(number)) # TODO: solve binance LOT_SIZE issue that forced us to keep only 2 numbers after dot
+
+    def _calculate_arbitrage_coins(self, orderbook, balance):
+        total_coins = 0
+        index = 0
+        price = None
+        current_balance = balance        
+        while index < len(orderbook) and current_balance > 0:
+            price = float(orderbook[index][0])
+            amount = float(orderbook[index][1])                        
+            cost = price * amount            
+            if current_balance >= cost:
+                total_coins += amount                
+            else:                
+                total_coins += current_balance /  price
+                cost = current_balance                
+            current_balance -= cost
+            index += 1            
+        return total_coins, price
