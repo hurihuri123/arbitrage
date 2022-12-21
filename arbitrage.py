@@ -17,7 +17,7 @@ class Arbitrage():
         self.root_exchange = root_exchange # Serves as the bank and destination for all money        
         self.min_gap_percentage = 1.5
         self.max_gap_percentage = 15
-        self.budget = 15
+        self.budget = 14
         self.budget_buffer = self.budget * 100
         self.ignore_list = self.read_ignore_list()
         
@@ -30,7 +30,7 @@ class Arbitrage():
             print("{} checking arbitrage for pair {} between exchanges {}/{}".format(current_time,symbol, exchange1.name(), exchange2.name()))
             # TODO: calculate transcations fees - each exchange take the fees as quntity from our order.
             # result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)
-            result = self._should_take_arbitrage2(exchange1, exchange2, symbol=symbol)            
+            result = self._should_take_arbitrage(exchange1, exchange2, symbol=symbol)            
             if result: 
                 self.write_to_file(result)
                 print(result)                

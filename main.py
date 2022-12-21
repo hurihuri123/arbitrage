@@ -1,4 +1,5 @@
 import time
+import json
 from arbitrage import Arbitrage
 from exchanges.exchanges import exchanges_dict, Exchange
 from services.send_email import sendEmail
@@ -7,6 +8,39 @@ if __name__ == "__main__":
     arbitrage = Arbitrage(root_exchange=exchanges_dict["BINANCE"])    
     binance:Exchange = exchanges_dict["BINANCE"]
     kucoin:Exchange = exchanges_dict["KUCOIN"]
+
+    
+
+    # symbol = "KMDUSDT"
+    # print("BINANCE ORDER BOOK:\n")
+    
+    # orderbook1 = binance.get_order_book(symbol)
+    # orderbook2 = kucoin.get_order_book(symbol)  
+    # print(arbitrage.bot_calcualte_arbitrage_gap_with_budget(orderbook1, orderbook2, 15))
+    
+
+
+    # with open('binance_orderbook.txt', 'w') as convert_file:
+    #         convert_file.write(json.dumps(orderbook1))
+    
+    # with open('kucoin_orderbook.txt', 'w') as convert_file:
+    #         convert_file.write(json.dumps(orderbook2))
+
+    # print("ALGO 1 \n")
+    # volume1 = arbitrage._should_take_arbitrage(binance,kucoin,symbol)
+    # print(volume1)
+    # volume2 = arbitrage._should_take_arbitrage(kucoin, binance,symbol)    
+    # print(volume2)
+    # print("ALGO 2 \n")
+    # print(arbitrage._should_take_arbitrage2(binance,kucoin,symbol))
+
+
+    # print("KUCOIN ORDER BOOK:\n")
+    # print(kucoin.get_order_book())
+    
+    # print(arbitrage.temp_shuld_take_arbitrage(binance,kucoin,symbol))
+    # print("algo 2")
+    # print(arbitrage.temp_shuld_take_arbitrage2(binance,kucoin,symbol))
 
     symbols = []
     currencies = binance.get_all_coins()             
