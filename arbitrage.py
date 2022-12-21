@@ -15,10 +15,10 @@ IGNORE_LIST_PATH = "ignore_list.txt"
 class Arbitrage():
     def __init__(self, root_exchange:Exchange) -> None:
         self.root_exchange = root_exchange # Serves as the bank and destination for all money        
-        self.min_gap_percentage = 0.1
+        self.min_gap_percentage = 1.5
         self.max_gap_percentage = 15
-        self.budget = 5400
-        self.budget_buffer = self.budget * 1
+        self.budget = 15
+        self.budget_buffer = self.budget * 100
         self.ignore_list = self.read_ignore_list()
         
     def scan(self, symbols, exchange1:Exchange, exchange2:Exchange):               
@@ -82,8 +82,7 @@ class Arbitrage():
                 return True
         return False
 
-    def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook):                
-        sell_orderbook = sell_orderbook[::-1]
+    def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook):                        
         results = []                
         buy_index = sell_index = 0
         total_amount = total_cost = total_profit = 0        
@@ -92,7 +91,8 @@ class Arbitrage():
             buy_leader_amount = float(buy_orderbook[buy_index][1])
             sell_leader_price =  float(sell_orderbook[sell_index][0])
             sell_leader_amount = float(sell_orderbook[sell_index][1])
-            gap_percentage = self._get_change(buy_leader_price, sell_leader_price)
+            # gap_percentage = self._get_change(buy_leader_price, sell_leader_price)
+            gap_percentage = self.bot_calculate_arbitrage_gap(buy_leader_price, sell_leader_price)
             amount = min(buy_leader_amount, sell_leader_amount)            
             if buy_leader_amount > sell_leader_amount:                            
                 buy_orderbook[buy_index][1] = buy_leader_amount - sell_leader_amount
@@ -144,11 +144,11 @@ class Arbitrage():
             print("No matching orderbook found for {} at exchanges {}/{}".format(symbol,exchange1.name(),exchange2.name()))
             self.add_symbol_to_ignore_list(symbol)
             return False
-        volume = self._calculate_arbitrage_volume2(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2), budget_buffer=self.budget_buffer, min_gap_percentage=self.min_gap_percentage)
+        volume = self._calculate_arbitrage_volume2(buy_orderbook=exchange1.get_bid_order_book(orderbook1), sell_orderbook=exchange2.get_ask_order_book(orderbook2), budget_buffer=self.budget_buffer, min_gap_percentage=self.min_gap_percentage)
         if len(volume) > 0:  # TODO: consider using total cost vaariable from should_take_arbitrage           
            return volume              
 
-        volume = self._calculate_arbitrage_volume2(buy_orderbook=exchange2.get_ask_order_book(orderbook2), sell_orderbook=exchange1.get_bid_order_book(orderbook1), budget_buffer=self.budget_buffer, min_gap_percentage=self.min_gap_percentage)
+        volume = self._calculate_arbitrage_volume2(buy_orderbook=exchange2.get_bid_order_book(orderbook2), sell_orderbook=exchange1.get_ask_order_book(orderbook1), budget_buffer=self.budget_buffer, min_gap_percentage=self.min_gap_percentage)
         if len(volume) > 0:
             return volume
             
@@ -161,12 +161,12 @@ class Arbitrage():
             print("No matching orderbook found for {} at exchanges {}/{}".format(symbol,exchange1.name(),exchange2.name()))
             self.add_symbol_to_ignore_list(symbol)
             return False
-        volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2))
-        if len(volume) > 0 and self._check_budget_buffer(volume):  # TODO: consider using total cost vaariable from should_take_arbitrage           
+        volume = self._calculate_arbitrage_volume(buy_orderbook=exchange1.get_bid_order_book(orderbook1), sell_orderbook=exchange2.get_ask_order_book(orderbook2))        
+        if len(volume) > 0 and self._check_budget_buffer(volume):  # TODO: consider using total cost vaariable from should_take_arbitrage               
             return self.summary(symbol=symbol, buy_exchange=exchange1, sell_exchange=exchange2, volume=volume)                 
 
-        volume = self._calculate_arbitrage_volume(buy_orderbook=exchange2.get_ask_order_book(orderbook2), sell_orderbook=exchange1.get_bid_order_book(orderbook1))
-        if len(volume) > 0 and self._check_budget_buffer(volume):
+        volume = self._calculate_arbitrage_volume(buy_orderbook=exchange2.get_bid_order_book(orderbook2), sell_orderbook=exchange1.get_ask_order_book(orderbook1))
+        if len(volume) > 0 and self._check_budget_buffer(volume):                  
             return self.summary(symbol=symbol, buy_exchange=exchange2, sell_exchange=exchange1, volume=volume)                        
             
         return None        
@@ -224,8 +224,8 @@ class Arbitrage():
         return float('{:.2f}'.format(number)) # TODO: solve binance LOT_SIZE issue that forced us to keep only 2 numbers after dot
 
     def _calculate_arbitrage_coins(self, orderbook, balance, is_sell_orderbook):
-        if is_sell_orderbook:
-            orderbook = orderbook[::-1]
+        # if is_sell_orderbook:
+        #     orderbook = orderbook[::-1]
         total_coins = 0
         index = 0
         price = None
@@ -242,3 +242,24 @@ class Arbitrage():
             current_balance -= cost
             index += 1            
         return total_coins, price
+
+    def bot_calculate_arbitrage_gap(self, best_bid_1, best_ask_2):
+        # Calculate the arbitrage gap percentage
+        gap = (best_ask_2 - best_bid_1) / best_bid_1 * 100
+        return gap
+
+    def bot_calcualte_arbitrage_gap_with_budget(self,order_book_1, order_book_2, budget):                
+        # Get the best bid and ask prices from both order books
+        best_bid_1 = float(order_book_1["bids"][0][0])
+        best_ask_1 = float(order_book_1["asks"][0][0])
+        best_bid_2 = float(order_book_2["bids"][0][0])
+        best_ask_2 = float(order_book_2["asks"][0][0])
+
+        # Calculate the maximum number of units that can be bought and sold within the budget
+        max_units_buy = budget / best_ask_1
+        max_units_sell = budget / best_bid_2
+
+        # Calculate the arbitrage gap percentage based on the maximum units that can be bought and sold
+        gap = (best_ask_2 * max_units_sell - best_bid_1 * max_units_buy) / (best_bid_1 * max_units_buy) * 100
+        return gap
+
