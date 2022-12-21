@@ -3,6 +3,22 @@ from binance.exceptions import BinanceAPIException
 
 BINANCE_NAME = "BINANCE"
 
+harcoded_orderbook = {
+    "bids":[
+        ['0.3443','182763'],    # 62,925.301$. 531.1992
+        ['0.3442', '11622'],    # 4000.2924$
+        ['0.3441','2524']       # 868.5084$
+        # 2524+11622+1542.8382=15688.8382 coins for 5400$
+    ],
+    "asks":[
+        ['0.3430','3400'],      # 1166$
+        ['0.3429','96010'],     # 32,921.829$
+        ['0.3428', '137421']    # 47,107.919$
+        # 3400+12347=15747.776027996502 coins for 5400$
+    ]
+    # 58.93 coins gaps, which is 20.28$ profit which is 0.3755% precentage
+}
+
 class BinanceAPI():
     def __init__(self, api_key, api_secret) -> None:
         self.base_asset = "USDT"
@@ -83,4 +99,4 @@ class BinanceAPI():
         return BINANCE_NAME
 
     def _get_order_book(self, symbol):
-        return self.client.get_order_book(symbol=symbol)
+        return self.client.get_order_book(symbol=symbol)        

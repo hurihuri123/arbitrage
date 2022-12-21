@@ -15,9 +15,9 @@ IGNORE_LIST_PATH = "ignore_list.txt"
 class Arbitrage():
     def __init__(self, root_exchange:Exchange) -> None:
         self.root_exchange = root_exchange # Serves as the bank and destination for all money        
-        self.min_gap_percentage = 1
+        self.min_gap_percentage = 0.1
         self.max_gap_percentage = 15
-        self.budget = 15
+        self.budget = 5400
         self.budget_buffer = self.budget * 1
         self.ignore_list = self.read_ignore_list()
         
@@ -146,11 +146,11 @@ class Arbitrage():
             return False
         volume = self._calculate_arbitrage_volume2(buy_orderbook=exchange1.get_ask_order_book(orderbook1), sell_orderbook=exchange2.get_bid_order_book(orderbook2), budget_buffer=self.budget_buffer, min_gap_percentage=self.min_gap_percentage)
         if len(volume) > 0:  # TODO: consider using total cost vaariable from should_take_arbitrage           
-            return self.summary(symbol=symbol, buy_exchange=exchange1, sell_exchange=exchange2, volume=volume)                 
+           return volume              
 
         volume = self._calculate_arbitrage_volume2(buy_orderbook=exchange2.get_ask_order_book(orderbook2), sell_orderbook=exchange1.get_bid_order_book(orderbook1), budget_buffer=self.budget_buffer, min_gap_percentage=self.min_gap_percentage)
         if len(volume) > 0:
-            return self.summary(symbol=symbol, buy_exchange=exchange2, sell_exchange=exchange1, volume=volume)                        
+            return volume
             
         return None   
 
