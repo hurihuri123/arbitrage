@@ -21,8 +21,7 @@ class Arbitrage():
         self.budget_buffer = self.budget * 1
         self.ignore_list = self.read_ignore_list()
         
-
-    def scan(self, symbols, exchange1:Exchange, exchange2:Exchange):         
+    def scan(self, symbols, exchange1:Exchange, exchange2:Exchange):               
         for symbol in symbols:
             if symbol in self.ignore_list:
                 continue
@@ -83,10 +82,11 @@ class Arbitrage():
                 return True
         return False
 
-    def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook):        
+    def _calculate_arbitrage_volume(self, buy_orderbook, sell_orderbook):                
+        sell_orderbook = sell_orderbook[::-1]
         results = []                
         buy_index = sell_index = 0
-        total_amount = total_cost = total_profit = 0
+        total_amount = total_cost = total_profit = 0        
         while buy_index < len(buy_orderbook) and sell_index < len(sell_orderbook) and total_cost <= self.budget_buffer:            
             buy_leader_price = float(buy_orderbook[buy_index][0])
             buy_leader_amount = float(buy_orderbook[buy_index][1])
@@ -106,7 +106,7 @@ class Arbitrage():
                 price = buy_leader_price
                 buy_index += 1
                 sell_index += 1
-            if gap_percentage < self.min_gap_percentage or gap_percentage >= self.max_gap_percentage:
+            if gap_percentage < self.min_gap_percentage or gap_percentage >= self.max_gap_percentage:                
                 break         
             cost = price * amount
             total_amount += amount # TODO: convert amount to decimal
@@ -114,7 +114,7 @@ class Arbitrage():
             total_profit += cost * gap_percentage / 100
             results.append({"total_cost":total_cost, "total_profit":total_profit, "total_amount":total_amount ,"percentage":gap_percentage, "price":price})            
                                 
-        # TODO: support calculating part of column, no need to take the whole column always        
+        # TODO: support calculating part of column, no need to take the whole column always                
         return results
 
     def _calculate_arbitrage_volume2(self, buy_orderbook, sell_orderbook, budget_buffer , min_gap_percentage):
@@ -125,10 +125,8 @@ class Arbitrage():
         3. Calcualte how much the spare coins worth in dollars
         4. Calcualte the profit in percentages
         """        
-        print("BUY:\n{}".format(buy_orderbook))
-        print("SELL:\n{}".format(sell_orderbook))
-        buy_total_coins, last_buy_price = self._calculate_arbitrage_coins(buy_orderbook, budget_buffer)
-        sell_total_coins, last_sell_price = self._calculate_arbitrage_coins(sell_orderbook, budget_buffer)
+        buy_total_coins, last_buy_price = self._calculate_arbitrage_coins(buy_orderbook, budget_buffer, False)
+        sell_total_coins, last_sell_price = self._calculate_arbitrage_coins(sell_orderbook, budget_buffer, True)
         coins_profit = buy_total_coins - sell_total_coins
         profit_dollars = coins_profit * last_sell_price
         profit_percentage = profit_dollars / budget_buffer * 100
@@ -213,7 +211,7 @@ class Arbitrage():
         try:
             stopword=open(IGNORE_LIST_PATH,"r")
             lines = stopword.read().split('\n')
-            print("ignore list:\n {}".format(lines))
+            # print("ignore list:\n {}".format(lines))
             return lines
         except Exception as e:
             print(e)
@@ -225,7 +223,9 @@ class Arbitrage():
         if not number: return
         return float('{:.2f}'.format(number)) # TODO: solve binance LOT_SIZE issue that forced us to keep only 2 numbers after dot
 
-    def _calculate_arbitrage_coins(self, orderbook, balance):
+    def _calculate_arbitrage_coins(self, orderbook, balance, is_sell_orderbook):
+        if is_sell_orderbook:
+            orderbook = orderbook[::-1]
         total_coins = 0
         index = 0
         price = None
