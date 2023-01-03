@@ -45,7 +45,7 @@ class KuCoinAPI():
         if not success:
             raise Exception("KUCOIN: Failed openning margin order side:{}, type:{}, quantity:{}, funds:{}".format(side,order_type,quantity,funds))
         print("KuCoin {} {} success".format(side,symbol))
-        return response
+        return True
 
     def withdraw(self, asset, address, amount):
         self.client.create_withdrawal(currency=asset, amount=amount, address=address)

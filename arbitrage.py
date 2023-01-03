@@ -45,10 +45,13 @@ class Arbitrage():
         funds = self._get_x_numbers_after_dot(funds)
         print_data = "In do arbitrage with: buyExchange:{},sellExchange:{},symbol:{},amount:{},funds:{}\n".format(buy_exchange.name(),sell_exchange.name(),symbol,amount,funds)
         print(print_data)  
-                  
+        is_sell_success = False
         try:                        
-            sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds ,side=sell_exchange.side_sell())  
-            buy_exchange.create_margin_order(symbol=symbol, quantity=amount, funds=funds, side=buy_exchange.side_buy()) 
+            is_sell_success = sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds ,side=sell_exchange.side_sell()) 
+            if is_sell_success: 
+                is_buy_success = buy_exchange.create_margin_order(symbol=symbol, quantity=amount, funds=funds, side=buy_exchange.side_buy()) 
+                if not is_buy_success:
+                    raise Exception("Unexpected buy failure: this exepction is manually raised, {}".format(print_data))
         except Exception as e:            
             print("In Do Arbitrage exception\n")
             print(e)
@@ -61,7 +64,8 @@ class Arbitrage():
                 sendEmail(title="Do Arbitrage exception",contect="{}\n{}".format(print_data, str(e)))
             self.add_symbol_to_ignore_list(symbol)            
             # Buy the sold coins back
-            sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds, side=sell_exchange.side_buy()) 
+            if is_sell_success:
+                sell_exchange.create_margin_order(symbol=symbol,quantity=amount, funds=funds, side=sell_exchange.side_buy())
             # TODO: repay loan
             raise Exception("Failed placing buy spot order, exchange:{},symbol:{},amount:{}\n err:{}".format(buy_exchange.name(),symbol,amount,e))
         
