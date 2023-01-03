@@ -15,10 +15,10 @@ IGNORE_LIST_PATH = "ignore_list.txt"
 class Arbitrage():
     def __init__(self, root_exchange:Exchange) -> None:
         self.root_exchange = root_exchange # Serves as the bank and destination for all money        
-        self.min_gap_percentage = 1.5
+        self.min_gap_percentage = 1
         self.max_gap_percentage = 15
         self.budget = 14
-        self.budget_buffer = self.budget * 100
+        self.budget_buffer = self.budget * 500
         self.ignore_list = self.read_ignore_list()
         
     def scan(self, symbols, exchange1:Exchange, exchange2:Exchange):               
